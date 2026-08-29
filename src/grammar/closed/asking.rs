@@ -67,7 +67,7 @@ pub enum Built {
     /// `кое` in front or a particle behind: `кое-кто`, `кто-то`. There is one,
     /// and which is left unsaid.
     Indefinite,
-    /// `не` in front: `некто`, `некого`. Which of the two it is depends on
+    /// `не` in front: `некто`, `негде`. Which of the two it is depends on
     /// where the stress falls, and the writing does not say.
     Prefixed
 }
@@ -123,6 +123,11 @@ fn asked(written: &str) -> Option<&'static str> {
 /// A run holding a space is answered by nothing: a preposition standing
 /// between the particle and the word parts them — `не у кого`, `кое в чём` —
 /// and what is parted was not built.
+///
+/// Only the dictionary forms of the asking words are reached: `некого` and
+/// `никем` are built on declined forms and answer nothing here, because a
+/// declined pronoun is read through its lemma, and
+/// [`crate::grammar::closed::pronoun`] names the few like `некого` outright.
 ///
 /// # Examples
 ///
@@ -319,7 +324,12 @@ mod tests {
 
     #[test]
     fn the_prefix_the_stress_decides_is_left_undecided() {
-        for held in ["некто", "нечто", "негде", "некого"] {
+        for held in ["некто", "нечто", "негде", "некуда"] {
+            assert_eq!(
+                built_from(held).map(|(built, _)| built),
+                Some(Built::Prefixed),
+                "{held} is built and left undecided"
+            );
             assert!(
                 !denies(held),
                 "{held} is not called a denial by the letters alone"
@@ -329,6 +339,13 @@ mod tests {
                 "{held} is not called indefinite by them either"
             );
         }
+    }
+
+    #[test]
+    fn a_particle_on_a_declined_form_is_not_reached() {
+        assert_eq!(built_from("некого"), None);
+        assert_eq!(built_from("никем"), None);
+        assert_eq!(built_from("ничему"), None);
     }
 
     #[test]

@@ -19,7 +19,7 @@
 //! lands on the stem. That is not an exception to the scheme; it is what the
 //! scheme means when nothing follows the stem.
 
-use crate::grammar::{Case, Number, declension::index::Accent};
+use crate::grammar::{Animacy, Case, Number, declension::index::Accent};
 
 /// What carries the stress in a cell.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -33,36 +33,82 @@ pub enum Falls {
 
 /// Where the stress falls in one cell.
 ///
+/// The animacy is asked for because the plural accusative states no row of
+/// its own in any declension: it repeats the nominative for a thing and the
+/// genitive for a living being, and the stress belongs to the row actually
+/// written. Scheme `e` keeps the stem through the nominative plural, so the
+/// accusative of a thing keeps it too — `жёлуди` in both cells, not `жёлуди`
+/// against `желуди`.
+///
 /// # Examples
 ///
 /// ```
 /// use rusem::grammar::{
-///     Case, Number,
+///     Animacy, Case, Number,
 ///     declension::index::{
 ///         Accent,
 ///         falls::{Falls, on}
 ///     }
 /// };
 ///
-/// assert_eq!(on(Accent::A, Case::Genitive, Number::Plural), Falls::Stem);
-/// assert_eq!(on(Accent::B, Case::Genitive, Number::Plural), Falls::Ending);
 /// assert_eq!(
-///     on(Accent::C, Case::Nominative, Number::Singular),
+///     on(
+///         Accent::A,
+///         Case::Genitive,
+///         Number::Plural,
+///         Animacy::Inanimate
+///     ),
 ///     Falls::Stem
 /// );
 /// assert_eq!(
-///     on(Accent::C, Case::Nominative, Number::Plural),
+///     on(
+///         Accent::B,
+///         Case::Genitive,
+///         Number::Plural,
+///         Animacy::Inanimate
+///     ),
 ///     Falls::Ending
 /// );
 /// assert_eq!(
-///     on(Accent::F, Case::Nominative, Number::Singular),
+///     on(
+///         Accent::C,
+///         Case::Nominative,
+///         Number::Singular,
+///         Animacy::Inanimate
+///     ),
 ///     Falls::Stem
 /// );
-/// assert_eq!(on(Accent::F, Case::Dative, Number::Singular), Falls::Ending);
+/// assert_eq!(
+///     on(
+///         Accent::C,
+///         Case::Nominative,
+///         Number::Plural,
+///         Animacy::Inanimate
+///     ),
+///     Falls::Ending
+/// );
+/// assert_eq!(
+///     on(
+///         Accent::E,
+///         Case::Accusative,
+///         Number::Plural,
+///         Animacy::Inanimate
+///     ),
+///     Falls::Stem
+/// );
+/// assert_eq!(
+///     on(
+///         Accent::F,
+///         Case::Dative,
+///         Number::Singular,
+///         Animacy::Inanimate
+///     ),
+///     Falls::Ending
+/// );
 /// ```
 #[must_use]
-pub const fn on(accent: Accent, case: Case, number: Number) -> Falls {
-    let case = case.merged();
+pub const fn on(accent: Accent, case: Case, number: Number, animacy: Animacy) -> Falls {
+    let case = repeated(case.merged(), number, animacy);
 
     match accent {
         Accent::A => Falls::Stem,
@@ -81,6 +127,24 @@ pub const fn on(accent: Accent, case: Case, number: Number) -> Falls {
         Accent::F => pulled(case, number, Case::Nominative, Number::Singular),
         Accent::FPrime => pulled(case, number, Case::Accusative, Number::Singular),
         Accent::FDouble => doubled(case, number)
+    }
+}
+
+/// The row of the paradigm a cell reads, once the plural accusative is
+/// resolved.
+///
+/// The singular accusative is left standing: the first declension states a
+/// row for it, and the primed schemes `d′` and `f′` name the cell itself.
+/// The plural accusative has a row nowhere, so its stress is the stress of
+/// the row it repeats.
+const fn repeated(case: Case, number: Number, animacy: Animacy) -> Case {
+    if !matches!((case, number), (Case::Accusative, Number::Plural)) {
+        return case;
+    }
+
+    match animacy {
+        Animacy::Animate => Case::Genitive,
+        Animacy::Inanimate => Case::Nominative
     }
 }
 

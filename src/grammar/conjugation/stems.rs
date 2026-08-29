@@ -28,21 +28,45 @@ const GLIDE: char = 'й';
 
 /// The stem the past tense is built on.
 ///
-/// It is the infinitive without its `-ть`, `-ти` or `-чь`, which is what the
-/// past has always been built on: `читать` gives `чита-` and `читал`, `нести`
-/// gives `нес-` and `нёс`.
+/// The past and the infinitive are built on the same stem, so where the
+/// infinitive shows that stem whole — the classes that end in a vowel and
+/// `-ть` — cutting the `-ть` recovers it: `читать` gives `чита-` and `читал`,
+/// `любить` gives `люби-` and `любил`.
+///
+/// Where the infinitive does not show the stem, nothing here recovers it, and
+/// the answer is [`None`]. `-чь` stands where a velar met the ending — `печь`
+/// hides `пёк` and `мочь` hides `мог`, and which velar is the verb's own fact.
+/// `-ти` and `-сть` may keep the stem's consonant or mask another: `везти`
+/// keeps `вёз` but `вести` hides `вёл`, and the spelling does not part them.
+/// And a listed verb's stems are facts about that verb — `тереть` cuts to
+/// `тере-`, yet its past is `тёр`.
 ///
 /// # Examples
 ///
 /// ```
-/// use rusem::grammar::conjugation::stems::past;
+/// use rusem::grammar::conjugation::{class, stems::past};
 ///
-/// assert_eq!(past("читать").as_deref(), Some("чита"));
-/// assert_eq!(past("нести").as_deref(), Some("нес"));
+/// assert_eq!(past("читать", class::of("читать")).as_deref(), Some("чита"));
+/// assert_eq!(past("мочь", class::of("мочь")), None);
+/// assert_eq!(past("тереть", class::of("тереть")), None);
 /// ```
 #[must_use]
-pub fn past(infinitive: &str) -> Option<String> {
-    for held in ["ться", "ть", "тись", "ти", "чься", "чь"] {
+pub fn past(infinitive: &str, class: Class) -> Option<String> {
+    match class {
+        Class::Glided | Class::Suffixed | Class::Dropped | Class::Bare | Class::Swapped => {
+            cut(infinitive)
+        }
+        Class::Consonantal | Class::Listed => None
+    }
+}
+
+/// The infinitive without its ending, which is all the spelling shows of the
+/// stem.
+///
+/// The cut is a fact about letters, not about the paradigm: whether what it
+/// leaves is a stem of the verb is for the class to say, and [`past`] says it.
+fn cut(infinitive: &str) -> Option<String> {
+    for held in ["ть", "ти", "чь"] {
         if let Some(stem) = infinitive.strip_suffix(held) {
             return Some(String::from(stem));
         }
@@ -85,7 +109,7 @@ pub fn past(infinitive: &str) -> Option<String> {
 /// ```
 #[must_use]
 pub fn present(infinitive: &str, class: Class) -> Option<String> {
-    let stem = past(infinitive)?;
+    let stem = cut(infinitive)?;
 
     match class {
         Class::Glided => Some(stem + &GLIDE.to_string()),
@@ -185,12 +209,25 @@ mod tests {
         present(infinitive, class::of(infinitive))
     }
 
+    fn past_of(infinitive: &str) -> Option<String> {
+        past(infinitive, class::of(infinitive))
+    }
+
     #[test]
-    fn the_past_stem_is_the_infinitive_without_its_ending() {
-        assert_eq!(past("читать").as_deref(), Some("чита"));
-        assert_eq!(past("нести").as_deref(), Some("нес"));
-        assert_eq!(past("печь").as_deref(), Some("пе"));
-        assert_eq!(past("умываться").as_deref(), Some("умыва"));
+    fn the_past_stem_is_the_cut_where_the_infinitive_shows_it_whole() {
+        assert_eq!(past_of("читать").as_deref(), Some("чита"));
+        assert_eq!(past_of("любить").as_deref(), Some("люби"));
+        assert_eq!(past_of("умывать").as_deref(), Some("умыва"));
+    }
+
+    #[test]
+    fn a_hidden_past_stem_is_refused_rather_than_cut() {
+        assert_eq!(past_of("мочь"), None);
+        assert_eq!(past_of("печь"), None);
+        assert_eq!(past_of("нести"), None);
+        assert_eq!(past_of("идти"), None);
+        assert_eq!(past_of("тереть"), None);
+        assert_eq!(past_of("сесть"), None);
     }
 
     #[test]
@@ -243,7 +280,7 @@ mod tests {
     #[test]
     fn a_labial_takes_a_letter_in_the_first_person_alone() {
         assert_eq!(first_person("люб", class::of("любить")), "любл");
-        assert_eq!(first_person("сп", class::of("спать")), "сп");
+        assert_eq!(first_person("сп", class::of("спать")), "спл");
         assert_eq!(first_person("готов", class::of("готовить")), "готовл");
     }
 
@@ -252,6 +289,7 @@ mod tests {
         assert_eq!(first_person("вод", class::of("водить")), "вож");
         assert_eq!(first_person("нос", class::of("носить")), "нош");
         assert_eq!(first_person("плат", class::of("платить")), "плач");
+        assert_eq!(first_person("езд", class::of("ездить")), "езж");
     }
 
     #[test]

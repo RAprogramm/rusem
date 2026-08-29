@@ -15,6 +15,22 @@
 //! whether the ending carries the stress. The last is why nothing could ask
 //! this paragraph before: an unsettled stress makes the rule silent rather
 //! than wrong, because `о ружьё` is stressed and takes neither answer.
+//!
+//! # Why only half the paragraph is judged
+//!
+//! The paragraph speaks of particular declensions: the feminine it admits is
+//! the one in `-а`/`-я`, and its masculines and neuters are the ones whose
+//! ending alternates between `е` and `и` at all. Neither fact is in the form
+//! — [`Form`] states case, number and gender, not the nominative — and the
+//! written word does not certify it either: `ночи` is a correct dative of a
+//! feminine outside `-а`/`-я`, and `имени` a correct prepositional of a
+//! neuter in `-мя`, yet demanding `е` after a letter other than `и` would
+//! flag both. So the rule judges only the half the written word itself
+//! certifies: after `и` the paragraph writes `и` in every declension that
+//! reaches this ending — `о гении`, `к Марии`, `в отделении` — and a word
+//! ending otherwise after `и` is reported. Where the letter before the ending
+//! is not `и`, the demanded `е` rests on a declension fact the core does not
+//! hold, and the rule stays silent rather than guesses.
 
 use crate::{
     grammar::{
@@ -45,13 +61,10 @@ pub const SCOPE: Scope = Scope {
 };
 
 /// What the paragraph says when it is broken.
-const SAYS: &str = "в неударяемом окончании пишется и только после и, иначе е";
+const SAYS: &str = "в неударяемом окончании после и пишется и";
 
 /// The letter the ending takes after `и`.
 const GLIDE: char = 'и';
-
-/// The letter it takes after anything else.
-const OTHERWISE: char = 'е';
 
 /// Reports whether the form is a dative the paragraph does not speak of.
 ///
@@ -76,7 +89,10 @@ const fn outside(form: Form) -> bool {
 ///
 /// It is about the unstressed ending, so a word whose stress is unknown and a
 /// word stressed on the ending are outside it: nothing is found, because
-/// nothing can be judged.
+/// nothing can be judged. Only the half after `и` is judged at all — the
+/// other half needs the declension, which neither the form nor the writing
+/// states — so a word like `ночи` or `платьи` is left alone rather than
+/// guessed at.
 ///
 /// # Examples
 ///
@@ -120,12 +136,11 @@ pub fn found(written: &str, form: Form, stress: &Stressed) -> Findings {
         return held;
     };
 
-    let wanted = if before == GLIDE { GLIDE } else { OTHERWISE };
-    if letters.get(at) == Some(&wanted) {
+    if before != GLIDE || letters.get(at) == Some(&GLIDE) {
         return held;
     }
 
-    held.push(Found::new(CITES, at, SAYS, spelled(written, at, wanted)));
+    held.push(Found::new(CITES, at, SAYS, spelled(written, at, GLIDE)));
     held
 }
 
@@ -163,15 +178,15 @@ mod tests {
     }
 
     #[test]
-    fn an_ending_after_anything_else_is_written_with_e() {
+    fn an_ending_after_anything_else_needs_the_declension_and_is_not_judged() {
         let stress = Stressed::settled(Stress::On(0));
-        let form = noun(Case::Prepositional, Gender::Neuter);
 
-        assert!(found("платье", form, &stress).is_empty());
-
-        let held = found("платьи", form, &stress);
-        assert_eq!(held.len(), 1);
-        assert_eq!(held[0].instead, "платье");
+        assert!(found("платье", noun(Case::Prepositional, Gender::Neuter), &stress).is_empty());
+        assert!(found("платьи", noun(Case::Prepositional, Gender::Neuter), &stress).is_empty());
+        assert!(found("имени", noun(Case::Prepositional, Gender::Neuter), &stress).is_empty());
+        assert!(found("ночи", noun(Case::Prepositional, Gender::Feminine), &stress).is_empty());
+        assert!(found("ночи", noun(Case::Dative, Gender::Feminine), &stress).is_empty());
+        assert!(found("деревни", noun(Case::Dative, Gender::Feminine), &stress).is_empty());
     }
 
     #[test]
@@ -179,10 +194,17 @@ mod tests {
         let stress = Stressed::settled(Stress::On(0));
 
         assert!(found("гению", noun(Case::Dative, Gender::Masculine), &stress).is_empty());
+    }
 
-        let held = found("деревни", noun(Case::Dative, Gender::Feminine), &stress);
+    #[test]
+    fn a_feminine_dative_after_i_is_written_with_i() {
+        let stress = Stressed::settled(Stress::On(0));
+
+        assert!(found("марии", noun(Case::Dative, Gender::Feminine), &stress).is_empty());
+
+        let held = found("марие", noun(Case::Dative, Gender::Feminine), &stress);
         assert_eq!(held.len(), 1);
-        assert_eq!(held[0].instead, "деревне");
+        assert_eq!(held[0].instead, "марии");
     }
 
     #[test]

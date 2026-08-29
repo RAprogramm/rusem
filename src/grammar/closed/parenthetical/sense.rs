@@ -6,8 +6,8 @@
 //!
 //! [`super::needs_commas`] answers the punctuation question and stops there.
 //! This module answers the other one: an aside is the speaker stepping out of
-//! the sentence to say something about it, and what they say falls into six
-//! kinds the grammars agree on.
+//! the sentence to say something about it, and what they say falls into the
+//! kinds the grammars name.
 //!
 //! It matters beyond style. Two asides of the same kind in one sentence are a
 //! repetition — `конечно, безусловно, он придёт` says sureness twice — and two
@@ -28,8 +28,13 @@ pub enum Sense {
     Certainty,
     /// `кажется`, `возможно`, `наверное`: the speaker is not.
     Doubt,
-    /// `по-моему`, `говорят`: who it is known from.
+    /// `мол`, `дескать`: who it is known from.
     Source,
+    /// `бывало`: how usually it happened.
+    ///
+    /// Rosenthal names the kind apart — `бывало`, `случается` point at the
+    /// usualness of what the sentence says rather than at its certainty.
+    Habit,
     /// `во-первых`, `итак`, `следовательно`: where it stands among the rest.
     Order,
     /// `впрочем`, `наоборот`, `однако`: how it turns against what came before.
@@ -47,12 +52,14 @@ const SENSES: &[(Sense, &[&str])] = &[
             "бесспорно",
             "действительно",
             "конечно",
+            "правда",
             "разумеется"
         ]
     ),
     (
         Sense::Doubt,
         &[
+            "верно",
             "видимо",
             "возможно",
             "кажется",
@@ -61,7 +68,8 @@ const SENSES: &[(Sense, &[&str])] = &[
             "по-видимому"
         ]
     ),
-    (Sense::Source, &["бывало", "верно", "правда"]),
+    (Sense::Source, &["дескать", "мол"]),
+    (Sense::Habit, &["бывало"]),
     (
         Sense::Order,
         &[
@@ -184,6 +192,15 @@ mod tests {
         assert_eq!(senses("КАЖЕТСЯ"), std::vec![Sense::Doubt]);
         assert_eq!(senses("итак"), std::vec![Sense::Order]);
         assert!(carries("однако", Sense::Turn));
+    }
+
+    #[test]
+    fn the_likely_the_true_and_the_usual_say_what_the_grammars_say() {
+        assert_eq!(senses("верно"), std::vec![Sense::Doubt]);
+        assert_eq!(senses("правда"), std::vec![Sense::Certainty]);
+        assert_eq!(senses("бывало"), std::vec![Sense::Habit]);
+        assert_eq!(senses("мол"), std::vec![Sense::Source]);
+        assert_eq!(senses("дескать"), std::vec![Sense::Source]);
     }
 
     #[test]

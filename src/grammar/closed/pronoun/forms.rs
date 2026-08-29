@@ -49,6 +49,10 @@ pub const DEMONSTRATIVE_FORMS: &[&str] = &[
 ];
 
 /// The forms the possessive pronouns take.
+///
+/// The spellings with `е` written for `ё` stand beside the `ё` ones — `мое`
+/// beside `моё`, `моем` beside `моём` — because print drops the two dots and
+/// a gate reads what is printed.
 pub const POSSESSIVE_FORMS: &[&str] = &[
     "ваш",
     "ваша",
@@ -63,8 +67,10 @@ pub const POSSESSIVE_FORMS: &[&str] = &[
     "ваших",
     "вашу",
     "его",
+    "ее",
     "её",
     "их",
+    "мое",
     "моего",
     "моей",
     "моем",
@@ -89,6 +95,7 @@ pub const POSSESSIVE_FORMS: &[&str] = &[
     "нашими",
     "наших",
     "нашу",
+    "свое",
     "своего",
     "своей",
     "своем",
@@ -101,6 +108,7 @@ pub const POSSESSIVE_FORMS: &[&str] = &[
     "свой",
     "своя",
     "своё",
+    "твое",
     "твоего",
     "твоей",
     "твоем",
@@ -214,6 +222,21 @@ mod tests {
         assert!(possesses_in_any_form("моего"));
         assert!(possesses_in_any_form("нашими"));
         assert!(!possesses_in_any_form("тот"));
+    }
+
+    #[test]
+    fn every_yo_cell_has_its_printed_e_neighbour() {
+        for held in POSSESSIVE_FORMS {
+            if !held.contains('ё') {
+                continue;
+            }
+
+            let printed = held.replace('ё', "е");
+            assert!(
+                possesses_in_any_form(&printed),
+                "{held} is listed and its printed spelling {printed} is not"
+            );
+        }
     }
 
     #[test]

@@ -25,6 +25,7 @@ pub const PARTICLES: &[&str] = &[
     "ведь",
     "вон",
     "вот",
+    "да",
     "давай",
     "давайте",
     "даже",
@@ -34,6 +35,7 @@ pub const PARTICLES: &[&str] = &[
     "ли",
     "лишь",
     "ль",
+    "мол",
     "не",
     "неужели",
     "ни",
@@ -45,7 +47,8 @@ pub const PARTICLES: &[&str] = &[
     "только",
     "уж",
     "хоть",
-    "чуть"
+    "чуть",
+    "якобы"
 ];
 
 /// The particles that build a form rather than change a meaning.

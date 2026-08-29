@@ -33,8 +33,12 @@ const PRESENT: &[(char, char)] = &[
     ('ц', 'ч')
 ];
 
-/// The clusters the present stem swaps whole: `искать` — `ищу`.
-const CLUSTERS: &[(&str, &str)] = &[("ск", "щ"), ("ст", "щ"), ("зд", "ж"), ("гл", "жл")];
+/// The clusters the present stem swaps whole: `искать` — `ищу`, `ездить` —
+/// `езжу`.
+///
+/// `зд` keeps its `з` in the swap — the `д` alone becomes `ж` — so the entry
+/// is written `зж`, not `ж`: `езжу`, not `ежу`.
+const CLUSTERS: &[(&str, &str)] = &[("ск", "щ"), ("ст", "щ"), ("зд", "зж")];
 
 /// The consonants that take an `л` rather than swapping: `любить` — `люблю`.
 const LABIAL: &[char] = &['б', 'п', 'в', 'ф', 'м'];
@@ -194,6 +198,12 @@ mod tests {
         assert_eq!(clustered("иск"), Some(String::from("ищ")));
         assert_eq!(clustered("прост"), Some(String::from("прощ")));
         assert_eq!(clustered("чита"), None);
+    }
+
+    #[test]
+    fn a_zd_stem_keeps_its_z_in_the_swap() {
+        assert_eq!(clustered("езд"), Some(String::from("езж")));
+        assert_eq!(clustered("гвозд"), Some(String::from("гвозж")));
     }
 
     #[test]

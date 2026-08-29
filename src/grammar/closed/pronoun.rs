@@ -46,8 +46,9 @@ pub const PERSONAL: &[&str] = &[
     "его",
     "ей",
     "ему",
+    "ею",
     "её",
-    "занеё",
+    "им",
     "ими",
     "их",
     "меня",
@@ -62,9 +63,10 @@ pub const PERSONAL: &[&str] = &[
     "неё",
     "ней",
     "нем",
-    "нём",
     "нему",
+    "нею",
     "ним",
+    "нём",
     "ними",
     "них",
     "он",
@@ -73,6 +75,8 @@ pub const PERSONAL: &[&str] = &[
     "оно",
     "тебе",
     "тебя",
+    "тобой",
+    "тобою",
     "ты",
     "я"
 ];
@@ -297,6 +301,20 @@ mod tests {
     fn a_word_built_out_of_no_asking_pronoun_is_in_no_built_class() {
         assert!(classes("нельзя").is_empty());
         assert!(classes("никель").is_empty());
+    }
+
+    #[test]
+    fn every_oblique_personal_form_is_listed() {
+        for held in ["им", "ею", "нею", "тобой", "тобою", "мною", "нами"]
+        {
+            assert!(is_of(held, Class::Personal), "{held}");
+        }
+    }
+
+    #[test]
+    fn a_run_together_of_a_preposition_and_a_pronoun_is_no_pronoun() {
+        assert!(classes("занеё").is_empty());
+        assert!(classes("сним").is_empty());
     }
 
     #[test]

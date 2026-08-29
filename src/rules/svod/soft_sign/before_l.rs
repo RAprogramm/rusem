@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 72, пункт 4. Мягкий знак для обозначения мягкости `л`.
+//! § 72, пункт 2. Мягкий знак для обозначения мягкости `л`.
 //!
 //! Для обозначения мягкости согласной, стоящей перед другой мягкой согласной,
 //! ь пишется для обозначения мягкости `л`: `сельдь`, `льстить`, `мельче`,
@@ -16,7 +16,10 @@ use super::{After, NAMED, stands, with_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
 /// Where this point is written.
-pub const CITES: Citation = Citation::point(72, 4);
+///
+/// The second of the two numbered points of § 72 — both belong to the
+/// soft-before-soft case.
+pub const CITES: Citation = Citation::point(72, 2);
 
 /// What this point is about.
 pub const SCOPE: Scope = scope::ANY;
@@ -73,7 +76,7 @@ mod tests {
     #[test]
     fn the_point_is_cited() {
         assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 4);
+        assert_eq!(CITES.point, 2);
     }
 
     #[test]

@@ -67,12 +67,18 @@ pub const DEFINITIVE: &[&str] = &[
 /// Everything else in the two classes is an asking adverb with `ни`, `не`,
 /// `кое-` or a particle on it, and [`asking::built_from`] reaches it. These
 /// are not. `нипочём`, `нимало` and `ничуть` are named by § 90 п. 2 and are
-/// built on words that do not ask; the rest carry `не`, whose class the
-/// stress settles and the writing does not.
+/// built on words that do not ask. The four with `не` are named because
+/// modern Russian keeps only their negative reading: the indefinite ones the
+/// older language had — `негде` for somewhere — are gone, so the writing is
+/// enough.
+///
+/// `некогда` is deliberately absent. Its indefinite reading is fully alive —
+/// `некогда популярный`, once popular — and is spelled and stressed exactly
+/// as the negative `мне некогда`, so nothing on the word settles the class
+/// and [`class`] answers nothing for it.
 const UNBUILT: &[(&str, Class)] = &[
     ("негде", Class::Negative),
     ("незачем", Class::Negative),
-    ("некогда", Class::Negative),
     ("некуда", Class::Negative),
     ("неоткуда", Class::Negative),
     ("нимало", Class::Negative),
@@ -201,6 +207,15 @@ mod tests {
     fn a_prefix_the_stress_decides_and_no_one_named_is_left_alone() {
         assert_eq!(class("некак"), None);
         assert_eq!(class("непочему"), None);
+    }
+
+    #[test]
+    fn the_word_of_two_living_readings_is_left_undecided() {
+        assert_eq!(
+            class("некогда"),
+            None,
+            "некогда denies and means once with one spelling and one stress"
+        );
     }
 
     #[test]

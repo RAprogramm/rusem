@@ -112,7 +112,7 @@ WordForm input flows through Morphology port (analyze) producing Readings with m
 - Segmentation invariant enforced at construction: segments must be ordered, non-overlapping, complete coverage of form, and contain at least one Root. Deserialization via serde re-checks the invariant.
 - Confidence is a closed unit-interval scale (0.0-1.0), not a probability; deserialization rejects out-of-range values.
 - Relation kinds are bidirectional: Hypernym ↔ Hyponym, PartOf ↔ HasPart, etc. Inverse is idempotent and total.
-- Only Hypernym, Hyponym, PartOf, HasPart, InstanceOf relations are transitive; others cannot be chained.
+- Only Hypernym, Hyponym, PartOf, HasPart relations are transitive; instance-of is membership, not inclusion, and does not chain in either direction.
 - Constraint evaluation distinguished two modes: holds_for (affirmative, climbs taxonomy) vs condemns (for negation, uses only direct class, no ancestors).
 - GrammarTag agreement checks only stated categories; absent categories do not clash (unknown case = no constraint).
 - Violations#severity() returns Fatal for 44 variants, Doubt for 5 (UnlistedWord, OccasionalWord, MissingDash), Note for 3 (UnsupportedClaim, AdvisedAgainst, MarkedReadingOnly).

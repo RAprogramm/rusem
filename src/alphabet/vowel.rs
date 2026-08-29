@@ -7,7 +7,7 @@
 //! Russian writes softness with the vowel rather than with the consonant:
 //! `нос` and `нёс` differ in one letter, and the letter that differs is the
 //! vowel. So a vowel carries two facts — the sound it stands for, and whether
-//! the consonant before it is soft — and five of them carry a glide besides.
+//! the consonant before it is soft — and four of them carry a glide besides.
 //!
 //! `ё` carries a third: it is written only under stress, which makes it the
 //! one letter of the alphabet that states where the stress falls.

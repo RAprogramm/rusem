@@ -174,7 +174,7 @@ fn parted(written: &str) -> Option<std::string::String> {
 /// having the word in any dictionary.
 ///
 /// Only the hyphenated shape answers true. `хахаха` is the same word written
-/// wrongly, and saying what it is belongs to [`required`], which reports the
+/// wrongly, and saying what it is belongs to [`found`], which reports the
 /// breach rather than reading past it.
 ///
 /// # Examples

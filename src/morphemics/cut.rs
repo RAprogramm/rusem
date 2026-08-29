@@ -292,7 +292,7 @@ fn fronts(written: &str) -> Vec<(Vec<String>, String)> {
 fn backs(written: &str) -> Vec<(Option<String>, String)> {
     let mut held = std::vec![(None, String::from(written))];
 
-    if let Some(one) = affix::trailing(affix::POSTFIXES, written) {
+    for one in affix::all_trailing(affix::POSTFIXES, written) {
         let left: String = written
             .chars()
             .take(written.chars().count() - one.chars().count())
@@ -349,11 +349,14 @@ fn tails(written: &str) -> Vec<(Vec<String>, Option<String>, String)> {
 /// Every way the end of a word may be read as an ending.
 ///
 /// The bare ending comes first: a masculine noun in the nominative has none,
-/// and that is not a failure to find one.
+/// and that is not a failure to find one. After it comes every listed ending
+/// the word ends with, longest first, not the longest alone: `семья` ends in
+/// both `ья` and `я`, and the standard cut `семь-я` is lost when only the
+/// longer match is kept.
 fn endings(written: &str) -> Vec<Option<String>> {
     let mut held = std::vec![None];
 
-    if let Some(one) = affix::trailing(affix::ENDINGS, written) {
+    for one in affix::all_trailing(affix::ENDINGS, written) {
         let left: String = written
             .chars()
             .take(written.chars().count() - one.chars().count())
@@ -423,6 +426,20 @@ mod tests {
                 assert!(is_a_root(&held.root), "{word}: {}", held.root);
             }
         }
+    }
+
+    #[test]
+    fn every_ending_the_table_admits_is_offered() {
+        let held = ways("семья");
+
+        assert!(
+            held.iter()
+                .any(|one| one.affixes.ending.as_deref() == Some("ья") && one.root == "сем")
+        );
+        assert!(
+            held.iter()
+                .any(|one| one.affixes.ending.as_deref() == Some("я") && one.root == "семь")
+        );
     }
 
     #[test]

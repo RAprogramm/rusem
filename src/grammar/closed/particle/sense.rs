@@ -52,8 +52,10 @@ const SENSES: &[(Sense, &[&str])] = &[
     (Sense::Limiting, &["лишь", "только", "хоть"]),
     (Sense::Intensifying, &["ведь", "даже", "же", "просто", "уж"]),
     (Sense::Denying, &["не", "ни"]),
+    (Sense::Affirming, &["да"]),
     (Sense::Asking, &["ли", "ль", "неужели", "разве"]),
-    (Sense::Comparing, &["будто", "как", "словно"])
+    (Sense::Comparing, &["будто", "как", "словно"]),
+    (Sense::Retelling, &["мол", "якобы"])
 ];
 
 /// The shades a written particle carries.
@@ -150,6 +152,33 @@ mod tests {
         assert_eq!(senses("вот"), std::vec![Sense::Pointing]);
         assert_eq!(senses("не"), std::vec![Sense::Denying]);
         assert_eq!(senses("РАЗВЕ"), std::vec![Sense::Asking]);
+    }
+
+    #[test]
+    fn every_shade_of_the_enum_has_a_carrier() {
+        for sense in [
+            Sense::Pointing,
+            Sense::Clarifying,
+            Sense::Limiting,
+            Sense::Intensifying,
+            Sense::Denying,
+            Sense::Affirming,
+            Sense::Asking,
+            Sense::Comparing,
+            Sense::Retelling
+        ] {
+            assert!(
+                SENSES.iter().any(|(held, _)| *held == sense),
+                "{sense:?} is a shade no particle carries"
+            );
+        }
+    }
+
+    #[test]
+    fn the_affirming_and_the_retelling_shades_are_carried() {
+        assert_eq!(senses("да"), std::vec![Sense::Affirming]);
+        assert!(carries("мол", Sense::Retelling));
+        assert!(carries("якобы", Sense::Retelling));
     }
 
     #[test]

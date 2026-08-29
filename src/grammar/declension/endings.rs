@@ -79,37 +79,68 @@ pub const fn table(
         (Declension::Second, Number::Plural) => Some(second_plural(stem, gender)),
         (Declension::Third, Number::Singular) => Some(third_singular()),
         (Declension::Third, Number::Plural) => Some(plural(Stem::Soft, "ей", "и")),
-        (Declension::Mixed, Number::Singular) => Some(mixed_singular()),
-        (Declension::Mixed, Number::Plural) => Some(plural(Stem::Soft, "ён", "а")),
+        (Declension::Mixed, Number::Singular) => mixed_singular(gender),
+        (Declension::Mixed, Number::Plural) => mixed_plural(gender),
         (Declension::Adjectival, _) => Some(adjectival(stem, gender, number)),
         (Declension::Indeclinable, _) => None
     }
 }
 
-/// The eleven mixed nouns in the singular.
+/// The eleven mixed nouns in the singular, told apart by their gender.
 ///
-/// They take the endings of the third declension everywhere but the
-/// instrumental, where they take the second: `времени`, `временем`. The
-/// growth of `-ен-` before them is not an ending and is added by the caller
-/// that builds the stem.
-const fn mixed_singular() -> Endings {
-    Endings {
-        nominative:    "я",
-        genitive:      "и",
-        dative:        "и",
-        accusative:    Some("я"),
-        instrumental:  "ем",
-        prepositional: "и"
+/// The ten neuters in `-мя` take the endings of the third declension
+/// everywhere but the instrumental, where they take the second: `времени`,
+/// `временем`. The growth of `-ен-` before them is not an ending and is added
+/// by the caller that builds the stem. `путь`, the one masculine, takes the
+/// third declension whole except the instrumental, where it says `путём` —
+/// which is why it is mixed at all. A gender the class does not hold gets no
+/// paradigm.
+const fn mixed_singular(gender: Gender) -> Option<Endings> {
+    match gender {
+        Gender::Neuter => Some(Endings {
+            nominative:    "я",
+            genitive:      "и",
+            dative:        "и",
+            accusative:    Some("я"),
+            instrumental:  "ем",
+            prepositional: "и"
+        }),
+        Gender::Masculine => Some(Endings {
+            nominative:    "ь",
+            genitive:      "и",
+            dative:        "и",
+            accusative:    Some("ь"),
+            instrumental:  "ём",
+            prepositional: "и"
+        }),
+        _ => None
+    }
+}
+
+/// The eleven mixed nouns in the plural, told apart by their gender.
+///
+/// The neuters in `-мя` decline hard there — `времена`, `временам`,
+/// `временами`, `временах` — with the genitive `времён` carrying the growth
+/// in the ending itself. `путь` stays with the third declension it follows in
+/// the singular: `пути`, `путей`, `путям`.
+const fn mixed_plural(gender: Gender) -> Option<Endings> {
+    match gender {
+        Gender::Neuter => Some(plural(Stem::Hard, "ён", "а")),
+        Gender::Masculine => Some(plural(Stem::Soft, "ей", "и")),
+        _ => None
     }
 }
 
 /// A noun that declines as an adjective declines as an adjective.
 ///
-/// `мороженое` and `столовая` were adjectives and kept their endings whole, so
+/// `мороженое` and `чаевые` were adjectives and kept their endings whole, so
 /// there is nothing of the noun paradigm in them: the attributive table beside
-/// this one is the whole answer.
+/// this one is the whole answer. The endings are asked for unstressed,
+/// because the only dictionary forms that betray an adjectival noun are the
+/// stem-stressed spellings — a stressed one is written `-ой` and cannot be
+/// told from a noun.
 const fn adjectival(stem: Stem, gender: Gender, number: Number) -> Endings {
-    let held = super::attributive::table(stem, gender, number);
+    let held = super::attributive::table(stem, gender, number, false);
 
     Endings {
         nominative:    held.nominative,

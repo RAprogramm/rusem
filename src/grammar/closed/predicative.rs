@@ -13,7 +13,18 @@
 //! clause would find none here and report a headless sentence, when the
 //! sentence is right and simply has no subject to find.
 //!
-//! The class is closed: no new word joins it.
+//! # Two closed kinds, and one open one this module refuses
+//!
+//! The modal and the existential predicatives are closed: no new word states
+//! a leave or an existence, and the lists below hold them whole. The **state**
+//! predicatives are not. Any quality adverb in `-о` can head a subjectless
+//! clause — `мне холодно`, `мне тепло`, `в комнате шумно`, and tomorrow's
+//! adverb too — so the kind is as open as the adverbs are, and no grammar
+//! enumerates it. A list here would be a sample passed off as the class, true
+//! for the words someone happened to write down and false for `тепло` beside
+//! `холодно`. So there is no such list: this module answers for the modal and
+//! the existential ones and stays silent about state, and a caller that meets
+//! `холодно` reads the clause rather than a list.
 
 /// The predicatives that state a need or a leave.
 pub const MODAL: &[&str] = &[
@@ -28,36 +39,20 @@ pub const MODAL: &[&str] = &[
     "следует"
 ];
 
-/// The predicatives that state how it is.
-pub const STATE: &[&str] = &[
-    "видно",
-    "грустно",
-    "душно",
-    "жаль",
-    "жарко",
-    "лень",
-    "плохо",
-    "светло",
-    "скучно",
-    "слышно",
-    "стыдно",
-    "темно",
-    "тихо",
-    "холодно",
-    "хорошо",
-    "шумно"
-];
-
 /// The predicatives that state whether there is any.
 ///
 /// `нет` is the whole of the negative existential — `нет времени` — and takes
 /// the genitive where `есть` takes the nominative.
 pub const EXISTENTIAL: &[&str] = &["есть", "нет", "нету"];
 
-/// Every predicative, whatever it states.
-const ALL: &[&[&str]] = &[MODAL, STATE, EXISTENTIAL];
+/// Every predicative the module can list.
+const ALL: &[&[&str]] = &[MODAL, EXISTENTIAL];
 
-/// Reports whether a written word can head a clause with no subject.
+/// Reports whether a written word is a modal or an existential predicative.
+///
+/// The state predicatives — `холодно`, `жаль` — are an open kind and are not
+/// listed, so they answer false here: false means the lists do not hold the
+/// word, not that the word cannot head a clause.
 ///
 /// # Examples
 ///
@@ -65,7 +60,7 @@ const ALL: &[&[&str]] = &[MODAL, STATE, EXISTENTIAL];
 /// use rusem::grammar::closed::predicative::is_predicative;
 ///
 /// assert!(is_predicative("надо"));
-/// assert!(is_predicative("Холодно"));
+/// assert!(is_predicative("Нет"));
 /// assert!(!is_predicative("стол"));
 /// ```
 #[must_use]
@@ -77,14 +72,12 @@ pub fn is_predicative(written: &str) -> bool {
 
 /// Reports whether the one who acts stands in the dative.
 ///
-/// A modal predicative puts them there — `мне надо` — and so does a state one
-/// said of a person: `мне холодно`. An existential does not: it has no actor
-/// at all.
+/// A modal predicative puts them there — `мне надо` — and an existential does
+/// not: it has no actor at all. A state predicative would put them there too,
+/// but the state kind is open and unlisted, so it is not answered here.
 #[must_use]
 pub fn takes_a_dative_actor(written: &str) -> bool {
-    let held = written.to_lowercase();
-
-    MODAL.contains(&held.as_str()) || STATE.contains(&held.as_str())
+    MODAL.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -106,7 +99,6 @@ mod tests {
     fn a_predicative_is_named_as_one() {
         assert!(is_predicative("надо"));
         assert!(is_predicative("нельзя"));
-        assert!(is_predicative("жаль"));
         assert!(is_predicative("НЕТ"));
     }
 
@@ -117,9 +109,20 @@ mod tests {
     }
 
     #[test]
-    fn a_modal_or_a_state_puts_the_actor_in_the_dative() {
+    fn the_open_state_kind_is_not_pretended_to_be_listed() {
+        for held in ["холодно", "тепло", "жаль", "шумно"] {
+            assert!(
+                !is_predicative(held),
+                "{held} is a state word and the open kind holds no list"
+            );
+            assert!(!takes_a_dative_actor(held), "{held}");
+        }
+    }
+
+    #[test]
+    fn a_modal_puts_the_actor_in_the_dative() {
         assert!(takes_a_dative_actor("надо"));
-        assert!(takes_a_dative_actor("холодно"));
+        assert!(takes_a_dative_actor("нельзя"));
     }
 
     #[test]

@@ -54,21 +54,33 @@ impl Endings {
 }
 
 /// The endings an agreeing word takes in the gender and number asked for.
+///
+/// Whether the endings carry the stress has to be told, because the masculine
+/// nominative is written by it: `новый` against `второй`. The dictionary form
+/// of an adjective states the answer outright — a stressed hard ending spells
+/// itself `-ой` and an unstressed one `-ый` or `-ий` — so a caller holding
+/// the dictionary form is never guessing here.
 #[must_use]
-pub const fn table(shape: Stem, gender: Gender, number: Number) -> Endings {
+pub const fn table(shape: Stem, gender: Gender, number: Number, stressed: bool) -> Endings {
     match (number, gender) {
         (Number::Plural, _) => plural(shape),
         (Number::Singular, Gender::Feminine) => feminine(shape),
-        (Number::Singular, Gender::Neuter) => neuter(shape),
-        (Number::Singular, _) => masculine(shape)
+        (Number::Singular, Gender::Neuter) => neuter(shape, stressed),
+        (Number::Singular, _) => masculine(shape, stressed)
     }
 }
 
 /// The masculine singular.
-const fn masculine(shape: Stem) -> Endings {
+///
+/// The hard nominative is the one cell the stress rewrites: `-ый` off the
+/// ending and `-ой` under it — `новый`, `второй`, `большой`. Zaliznyak's
+/// index writes the two as one declension under its schemes `a` and `b`, and
+/// no other cell changes its letters for the stress alone. A soft stem has no
+/// stressed nominative to part from `-ий`, so the stress does not reach it.
+const fn masculine(shape: Stem, stressed: bool) -> Endings {
     match shape {
         Stem::Hard => Endings {
-            nominative:    "ый",
+            nominative:    if stressed { "ой" } else { "ый" },
             genitive:      "ого",
             dative:        "ому",
             accusative:    None,
@@ -87,8 +99,8 @@ const fn masculine(shape: Stem) -> Endings {
 }
 
 /// The neuter singular, which parts from the masculine in two cells.
-const fn neuter(shape: Stem) -> Endings {
-    let held = masculine(shape);
+const fn neuter(shape: Stem, stressed: bool) -> Endings {
+    let held = masculine(shape, stressed);
     let nominative = match shape {
         Stem::Hard => "ое",
         Stem::Soft => "ее"

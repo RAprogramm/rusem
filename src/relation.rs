@@ -104,12 +104,16 @@ impl RelationKind {
     ///
     /// Only the taxonomic and partitive chains may: a hypernym of a hypernym is
     /// a hypernym, while a synonym of a synonym drifts and an antonym of an
-    /// antonym is not the word it started from.
+    /// antonym is not the word it started from. Instance-of is membership, not
+    /// inclusion: an instance is an individual, not a class, so nothing is an
+    /// instance of an instance and neither direction chains. A transitive
+    /// relation must have a transitive inverse — storage keeps one direction
+    /// and answers both — and every relation here is listed with its inverse.
     #[must_use]
     pub const fn is_transitive(self) -> bool {
         matches!(
             self,
-            Self::Hypernym | Self::Hyponym | Self::PartOf | Self::HasPart | Self::InstanceOf
+            Self::Hypernym | Self::Hyponym | Self::PartOf | Self::HasPart
         )
     }
 }
@@ -187,6 +191,18 @@ mod tests {
         assert!(RelationKind::Hypernym.is_transitive());
         assert!(!RelationKind::Synonym.is_transitive());
         assert!(!RelationKind::Causes.is_transitive());
+        assert!(!RelationKind::InstanceOf.is_transitive());
+    }
+
+    #[test]
+    fn a_transitive_relation_has_a_transitive_inverse() {
+        for kind in KINDS {
+            assert_eq!(
+                kind.is_transitive(),
+                kind.inverse().is_transitive(),
+                "{kind:?} and its inverse disagree on transitivity"
+            );
+        }
     }
 
     #[test]

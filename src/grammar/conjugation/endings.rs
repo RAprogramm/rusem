@@ -53,7 +53,11 @@ impl Endings {
 /// asks for both and keeps them both.
 ///
 /// A verb that stands outside both sets has no table, and the answer is
-/// [`None`]: `есть` and `дать` are stated form by form, not derived.
+/// [`None`]: `есть` and `дать` are stated form by form, not derived. So has a
+/// mixed verb: each of the three blends the sets its own way — `хотеть` takes
+/// the first in the singular and the second in the plural, `бежать` and
+/// `чтить` take the second everywhere but the third person plural — so no one
+/// table of endings states them, and they too are told form by form.
 ///
 /// # Examples
 ///
@@ -78,8 +82,7 @@ pub const fn table(conjugation: Conjugation, stem: Stem, stressed: bool) -> Opti
     match conjugation {
         Conjugation::First => Some(first(stem, stressed)),
         Conjugation::Second => Some(second(stem)),
-        Conjugation::Mixed => Some(mixed(stem)),
-        Conjugation::Irregular => None
+        Conjugation::Mixed | Conjugation::Irregular => None
     }
 }
 
@@ -122,29 +125,6 @@ const fn second(stem: Stem) -> Endings {
         first_plural:    "им",
         second_plural:   "ите",
         third_plural:    third
-    }
-}
-
-/// The verbs that draw from both sets.
-///
-/// `хотеть` takes the first conjugation in the singular and the second in the
-/// plural; `бежать` takes the second everywhere but the third person plural.
-/// The table below is the singular of the first and the plural of the second,
-/// which is `хотеть`; `бежать` is read off the same table with its own third
-/// person plural, and the reader that needs the difference asks for the verb.
-const fn mixed(stem: Stem) -> Endings {
-    let single = match stem {
-        Stem::Soft => "ю",
-        Stem::Hard => "у"
-    };
-
-    Endings {
-        first_singular:  single,
-        second_singular: "ешь",
-        third_singular:  "ет",
-        first_plural:    "им",
-        second_plural:   "ите",
-        third_plural:    "ят"
     }
 }
 
@@ -191,5 +171,11 @@ mod tests {
     #[test]
     fn a_verb_outside_both_sets_has_no_table() {
         assert!(table(Conjugation::Irregular, Stem::Hard, false).is_none());
+    }
+
+    #[test]
+    fn a_mixed_verb_has_no_table_either() {
+        assert!(table(Conjugation::Mixed, Stem::Hard, false).is_none());
+        assert!(table(Conjugation::Mixed, Stem::Soft, false).is_none());
     }
 }

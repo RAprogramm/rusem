@@ -38,6 +38,8 @@ pub enum Relation {
     Modifier,
     /// A number counting a noun.
     Counter,
+    /// A pronoun delimiting a noun's reference: `этот`, `каждый`, `весь`.
+    Determiner,
     /// A preposition marking the case of what follows.
     Marker,
     /// A word coordinated with another.
@@ -54,7 +56,7 @@ pub enum Relation {
 
 impl Relation {
     /// Every relation, in a fixed order, for indexing the parser's actions.
-    pub const ALL: [Self; 14] = [
+    pub const ALL: [Self; 15] = [
         Self::Root,
         Self::Subject,
         Self::Object,
@@ -63,6 +65,7 @@ impl Relation {
         Self::Attribute,
         Self::Modifier,
         Self::Counter,
+        Self::Determiner,
         Self::Marker,
         Self::Coordinate,
         Self::Junction,
@@ -97,7 +100,8 @@ impl Relation {
             "obl" => Self::Oblique,
             "amod" | "acl" => Self::Attribute,
             "nmod" | "appos" => Self::Modifier,
-            "nummod" | "det" => Self::Counter,
+            "nummod" => Self::Counter,
+            "det" => Self::Determiner,
             "case" => Self::Marker,
             "conj" => Self::Coordinate,
             "cc" => Self::Junction,
@@ -117,9 +121,12 @@ impl Relation {
     }
 
     /// Reports whether the relation is one an attribute holds to its noun.
+    ///
+    /// A counter and a determiner both hold it: `три стола`, `этот стол` —
+    /// each agrees with the noun it delimits, the way an adjective does.
     #[must_use]
     pub const fn describes(self) -> bool {
-        matches!(self, Self::Attribute | Self::Counter)
+        matches!(self, Self::Attribute | Self::Counter | Self::Determiner)
     }
 
     /// Reports whether the relation is one a participant holds to a predicate.
@@ -189,13 +196,14 @@ impl Tree {
     /// The predicate a position ultimately answers to, if any.
     ///
     /// A participant answers to its predicate directly; an attribute answers
-    /// to a noun which answers to one. Climbing stops at the root, and at a
-    /// depth that no real sentence exceeds.
+    /// to a noun which answers to one. Climbing stops at the root. The walk
+    /// is bounded by the number of words, which no chain in a tree can
+    /// exceed, and which ends the walk even if the heads ever loop.
     #[must_use]
     pub fn governor_of(&self, position: usize) -> Option<usize> {
         let mut standing = position;
 
-        for _ in 0..self.len().min(CLIMB) {
+        for _ in 0..self.len() {
             let head = self.head_of(standing)?;
             if self.label_of(standing).is_some_and(Relation::participates) {
                 return Some(head);
@@ -207,9 +215,6 @@ impl Tree {
     }
 }
 
-/// How far up a tree the search for a predicate climbs.
-const CLIMB: usize = 16;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -218,6 +223,28 @@ mod tests {
     fn a_label_is_read_without_its_subtype() {
         assert_eq!(Relation::read("obl:tmod"), Relation::Oblique);
         assert_eq!(Relation::read("nummod:gov"), Relation::Counter);
+    }
+
+    #[test]
+    fn a_determiner_is_not_a_counter() {
+        assert_eq!(Relation::read("det"), Relation::Determiner);
+        assert_eq!(Relation::read("nummod"), Relation::Counter);
+    }
+
+    #[test]
+    fn a_governor_is_found_however_deep_the_chain_stands() {
+        let words = 18;
+        let mut heads: Vec<Option<usize>> = (0..words).map(|held| Some(held + 1)).collect();
+        heads[words - 1] = None;
+        let mut labels = vec![Relation::Modifier; words];
+        labels[words - 2] = Relation::Subject;
+        labels[words - 1] = Relation::Root;
+        let tree = Tree {
+            heads,
+            labels
+        };
+
+        assert_eq!(tree.governor_of(0), Some(words - 1));
     }
 
     #[test]

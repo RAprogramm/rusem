@@ -121,6 +121,11 @@ pub fn unmasked(word: &str) -> String {
 /// word written wholly in Russian needs nothing done to it. It is the mixture
 /// that is a typing accident.
 ///
+/// The Latin side is the basic Latin alphabet, where every twin of this
+/// module lives. A letter of some third alphabet — Greek, or a Ukrainian
+/// vowel — is neither Russian nor Latin, so a word holding one is not a
+/// mixture of these two and is not reported as one.
+///
 /// # Examples
 ///
 /// ```
@@ -129,14 +134,13 @@ pub fn unmasked(word: &str) -> String {
 /// assert!(is_mixed("вoда"));
 /// assert!(!is_mixed("вода"));
 /// assert!(!is_mixed("code"));
+/// assert!(!is_mixed("стоλ"));
 /// ```
 #[inline]
 #[must_use]
 pub fn is_mixed(word: &str) -> bool {
     let russian = word.chars().any(|held| Letter::of(held).is_some());
-    let latin = word
-        .chars()
-        .any(|held| Letter::of(held).is_none() && held.is_alphabetic());
+    let latin = word.chars().any(|held| held.is_ascii_alphabetic());
 
     russian && latin
 }
@@ -235,6 +239,12 @@ mod tests {
         assert!(!is_mixed("вода"));
         assert!(!is_mixed("code"));
         assert!(!is_mixed(""));
+    }
+
+    #[test]
+    fn a_third_alphabet_is_not_taken_for_latin() {
+        assert!(!is_mixed("стоλ"), "Greek is neither of the two alphabets");
+        assert!(!is_mixed("стіл"), "a wholly Ukrainian word mixes nothing");
     }
 
     #[test]

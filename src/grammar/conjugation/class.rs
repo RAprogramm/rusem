@@ -78,6 +78,14 @@ impl Class {
 }
 
 /// The verbs in `-ать` whose stem swaps rather than taking a glide.
+///
+/// A closed group: Zaliznyak's dictionary states each of these verbs with the
+/// swap written into its entry — `пишу` under `писать`, `ищу` under `искать` —
+/// where a glided verb's entry shows `-аю`. The list holds only verbs the
+/// dictionary states so; a verb whose stated present is `-аю` — `страдаю`,
+/// `капаю`, `блистаю` — is the glided class however much its infinitive looks
+/// the part, and putting it here would write forms the dictionary does not
+/// hold.
 const SWAPPING: &[&str] = &[
     "писать",
     "плясать",
@@ -97,7 +105,6 @@ const SWAPPING: &[&str] = &[
     "роптать",
     "хлестать",
     "свистать",
-    "блистать",
     "трепетать",
     "лепетать",
     "бормотать",
@@ -109,9 +116,7 @@ const SWAPPING: &[&str] = &[
     "дремать",
     "сыпать",
     "щипать",
-    "капать",
     "глодать",
-    "страдать",
     "рыскать",
     "полоскать",
     "тесать",
@@ -120,8 +125,24 @@ const SWAPPING: &[&str] = &[
     "двигать"
 ];
 
-/// The verbs whose stem no rule finds.
+/// The verbs the infinitive misleads, whose forms are told rather than
+/// derived.
+///
+/// Two failings put a verb here, and Zaliznyak's dictionary states the truth
+/// of each entry. Most hide their present stem: no rule reaches `мог-` from
+/// `мочь`, `тр-` from `тереть` or `гон-` from `гнать` — the last one written
+/// out by the 1956 code's own index, `гнать, гонят (§ 44, п. 1)`. The rest
+/// stress their personal endings, which puts their conjugation outside § 44's
+/// reach: `стоять — стою`, `сидеть — сижу`, `кричать — кричу`, `гореть —
+/// горю` are second-conjugation facts the dictionary states and no paragraph
+/// of the code derives, so the class refuses to build on the general case the
+/// infinitive would otherwise get.
 const UNRULY: &[&str] = &[
+    "гнать",
+    "стоять",
+    "сидеть",
+    "кричать",
+    "гореть",
     "быть",
     "есть",
     "дать",
@@ -206,7 +227,7 @@ pub fn of(infinitive: &str) -> Class {
         return Class::Dropped;
     }
     if infinitive.ends_with("ить") {
-        return Class::Bare;
+        return bare_or_listed(infinitive);
     }
     if infinitive.ends_with("ти") || infinitive.ends_with("чь") {
         return Class::Consonantal;
@@ -219,17 +240,36 @@ pub fn of(infinitive: &str) -> Class {
     Class::Listed
 }
 
-/// The verbs in `-еть` and `-ать` that conjugate bare rather than glided.
+/// The verbs in `-еть`, `-ать` and `-ять` that conjugate bare rather than
+/// glided.
 ///
 /// These are § 44 of the code of 1956: the six verbs in `-еть` and the four in
-/// `-ать` that take the second conjugation. They lose their vowel like a verb
-/// in `-ить` does, so they are in the bare class and not in the glided one.
+/// `-ать` that take the second conjugation, with `спать` beside them because
+/// the paragraph's additional rule states it. They lose their vowel like a
+/// verb in `-ить` does, so they are in the bare class and not in the glided
+/// one.
 fn second_or_glided(infinitive: &str) -> Class {
     if matches!(super::of(infinitive), Conjugation::Second) {
         return Class::Bare;
     }
 
     Class::Glided
+}
+
+/// The verbs in `-ить` that conjugate bare, and the ones § 44 excepts.
+///
+/// § 44 sends every verb in `-ить` to the second conjugation except the ones
+/// it names first-conjugation — `брить`, `зиждиться` — which
+/// [`super::FIRST_IN_IT`] holds. An excepted verb does not join the bare
+/// class: its present stem is not the infinitive's cut — `брить` conjugates
+/// on `бре-`, not `бр-` — and no rule of this module reaches it, so the verb
+/// is listed and its forms are told rather than derived.
+fn bare_or_listed(infinitive: &str) -> Class {
+    if matches!(super::of(infinitive), Conjugation::Second) {
+        return Class::Bare;
+    }
+
+    Class::Listed
 }
 
 #[cfg(test)]
@@ -265,6 +305,32 @@ mod tests {
         assert_eq!(of("смотреть"), Class::Bare);
         assert_eq!(of("держать"), Class::Bare);
         assert_eq!(of("слышать"), Class::Bare);
+        assert_eq!(of("спать"), Class::Bare);
+        assert_eq!(of("ненавидеть"), Class::Bare);
+    }
+
+    #[test]
+    fn a_verb_the_paragraph_excepts_from_it_is_listed() {
+        assert_eq!(of("брить"), Class::Listed);
+        assert_eq!(of("побрить"), Class::Listed);
+        assert_eq!(of("стелить"), Class::Listed);
+        assert_eq!(of("почить"), Class::Listed);
+    }
+
+    #[test]
+    fn a_verb_that_stresses_its_endings_is_listed() {
+        assert_eq!(of("гнать"), Class::Listed);
+        assert_eq!(of("стоять"), Class::Listed);
+        assert_eq!(of("сидеть"), Class::Listed);
+        assert_eq!(of("кричать"), Class::Listed);
+        assert_eq!(of("гореть"), Class::Listed);
+    }
+
+    #[test]
+    fn a_verb_the_dictionary_states_with_aju_keeps_its_glide() {
+        assert_eq!(of("страдать"), Class::Glided);
+        assert_eq!(of("капать"), Class::Glided);
+        assert_eq!(of("блистать"), Class::Glided);
     }
 
     #[test]

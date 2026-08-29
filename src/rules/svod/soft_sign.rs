@@ -22,27 +22,31 @@
 //! Примечание. Между двумя мягкими `л` буква ь не пишется: `иллюзия`,
 //! `гулливый`.
 //!
-//! # The points, one to a file
+//! # The statements, one to a file
 //!
-//! The paragraph says five different things, and each of them is its own rule:
-//! it holds in its own case, it is cited by its own point, and it is broken on
-//! its own. Writing them as one function would make a breach of the fourth
-//! point indistinguishable from a breach of the second, and a reader could not
-//! be told which half of § 72 he had broken.
+//! The paragraph says five different things, and each of them is its own
+//! rule: it holds in its own case and it is broken on its own. Writing them
+//! as one function would make a breach of one statement indistinguishable
+//! from a breach of another, and a reader could not be told which half of
+//! § 72 he had broken.
 //!
-//! | Point | Module | Says |
+//! The source numbers only the two soft-before-soft cases as пункт 1 and
+//! пункт 2; the other three statements are unnumbered prose and are cited as
+//! the paragraph whole, told apart by what each says.
+//!
+//! | Cites | Module | Says |
 //! | --- | --- | --- |
-//! | 72.1 | [`end_of_word`] | a soft consonant closing a word takes the sign |
-//! | 72.2 | [`before_hard`] | a soft consonant before a hard one takes it |
-//! | 72.3 | [`before_hardening`] | before a soft consonant that hardens as the word changes |
-//! | 72.4 | [`before_l`] | to write the softness of `л` |
-//! | 72.5 | [`not_before_soft`] | nowhere else before a soft consonant |
+//! | § 72 | [`end_of_word`] | a soft consonant closing a word takes the sign |
+//! | § 72 | [`before_hard`] | a soft consonant before a hard one takes it |
+//! | § 72, п. 1 | [`before_hardening`] | before a soft consonant that hardens as the word changes |
+//! | § 72, п. 2 | [`before_l`] | to write the softness of `л` |
+//! | § 72 | [`not_before_soft`] | nowhere else before a soft consonant |
 //!
-//! # What every point is asked
+//! # What every rule is asked
 //!
 //! The same three things: the word, which consonant of it is being judged, and
 //! what stands after that consonant. Whether the consonant is soft at all is
-//! asked too, because the letters do not always show it — and a point that is
+//! asked too, because the letters do not always show it — and a rule that is
 //! not told cannot judge and says nothing.
 
 pub mod before_hard;
@@ -62,7 +66,7 @@ pub const CITES: Citation = Citation::whole(72);
 /// The letter the paragraph is about.
 pub const SIGN: char = 'ь';
 
-/// The consonant the fourth point names.
+/// The consonant the second point names.
 pub const NAMED: char = 'л';
 
 /// What stands after the consonant being judged.
@@ -81,10 +85,10 @@ pub enum After {
 
 /// Everything § 72 finds about one consonant of a word.
 ///
-/// Each point is asked in turn, and every point that is broken is reported
-/// with its own citation. They do not overlap: a consonant standing at the end
-/// of a word is not standing before anything, and a point about what follows
-/// has nothing to say about it.
+/// Each rule is asked in turn, and every one that is broken is reported with
+/// what it says. They do not overlap: a consonant standing at the end of a
+/// word is not standing before anything, and a rule about what follows has
+/// nothing to say about it.
 #[must_use]
 pub fn found(word: &str, written: char, soft: bool, after: After, at: usize) -> Findings {
     let mut held = Findings::new();
@@ -102,14 +106,14 @@ pub fn found(word: &str, written: char, soft: bool, after: After, at: usize) -> 
 ///
 /// The letters show only part of the paragraph, and only that part is judged.
 /// A sign standing before a consonant that is soft of itself — `ч`, `щ`, `й`
-/// — breaks the fifth point unless the fourth holds it: `няньчить` is written
-/// `нянчить`, while `пальчик` keeps its sign for the `л` the fourth point
-/// names. A sign between two `л` breaks the note: `гульливый` is written
-/// `гулливый`.
+/// — breaks the closing prohibition unless the second point holds it:
+/// `няньчить` is written `нянчить`, while `пальчик` keeps its sign for the
+/// `л` the second point names. A sign between two `л` breaks the note:
+/// `гульливый` is written `гулливый`.
 ///
 /// A missing sign is never judged here, because whether one is due needs the
 /// softness of the consonant, and the letters do not carry it: `кон` and
-/// `конь` are both words. The points take that softness as a fact from
+/// `конь` are both words. The rules take that softness as a fact from
 /// whoever holds it — the paradigm does — and judge the rest.
 #[must_use]
 pub fn judged(word: &str) -> Findings {
@@ -200,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn the_sign_the_fourth_point_holds_is_left_standing() {
+    fn the_sign_the_l_point_holds_is_left_standing() {
         assert!(judged("пальчик").is_empty());
         assert!(judged("мальчик").is_empty());
     }

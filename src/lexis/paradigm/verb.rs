@@ -37,6 +37,13 @@ const PERSONS: [Person; 3] = [Person::First, Person::Second, Person::Third];
 
 /// Builds every cell of a verb's paradigm.
 ///
+/// A verb flagged reflexive spells its particle in its lemma — that is what
+/// the flag asserts. A lemma flagged reflexive that carries no `-ся`/`-сь`
+/// states a contradiction, and a table built on either half of it would spell
+/// forms nobody has written: `читать` taken as reflexive would fill its cells
+/// with `читаюсь`, `читалась`. Such a word gets a table with no cells, the
+/// crate's way of leaving unstated what it cannot know.
+///
 /// # Examples
 ///
 /// ```
@@ -73,7 +80,13 @@ const PERSONS: [Person; 3] = [Person::First, Person::Second, Person::Third];
 #[must_use]
 pub fn of(lemma: &WordForm, held: Verb) -> Paradigm {
     let plain = if held.reflexive {
-        reflexive::bare(lemma.as_str()).unwrap_or_else(|| lemma.as_str().to_owned())
+        let Some(inner) = reflexive::bare(lemma.as_str()) else {
+            return Paradigm {
+                lemma: lemma.clone(),
+                cells: Vec::new()
+            };
+        };
+        inner
     } else {
         lemma.as_str().to_owned()
     };
@@ -271,6 +284,13 @@ mod tests {
             .as_deref(),
             Some("учится")
         );
+    }
+
+    #[test]
+    fn a_reflexive_flag_on_a_lemma_without_a_particle_states_no_cells() {
+        let table = of(&form("читать"), word(Aspect::Imperfective, true));
+
+        assert!(table.cells.is_empty());
     }
 
     #[test]

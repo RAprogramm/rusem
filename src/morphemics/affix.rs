@@ -5,16 +5,20 @@
 //! The affix tables the segmenter cuts by.
 //!
 //! The tables are authored here rather than imported, because no open Russian
-//! morpheme dictionary carries a license the project can ship under. They are
-//! written longest first, so a greedy scan finds `недо-` before `не-` and
-//! `-тельн-` before `-н-`.
+//! morpheme dictionary carries a license the project can ship under. Their
+//! order carries no meaning: every reader measures for itself — [`leading`]
+//! and [`trailing`] keep the longest match, [`all_leading`] and
+//! [`all_trailing`] sort what they gathered — so `недо-` is met before `не-`
+//! whatever line each is written on.
 //!
 //! A table entry is a claim about the language, not about any one word. The
 //! segmenter never trusts a match on its own: a prefix comes off only when what
 //! remains still looks like a word, and the result is graded accordingly.
 
-/// Prefixes, ordered so that a longer one is tried before a shorter one it
-/// starts with.
+/// Prefixes.
+///
+/// Each stands in the table once, and where one begins another — `недо` and
+/// `не` — the readers part them by length, not by which line comes first.
 pub const PREFIXES: &[&str] = &[
     "противо",
     "сверх",
@@ -52,7 +56,6 @@ pub const PREFIXES: &[&str] = &[
     "при",
     "про",
     "пре",
-    "про",
     "из",
     "ис",
     "вз",
@@ -73,8 +76,10 @@ pub const PREFIXES: &[&str] = &[
     "с"
 ];
 
-/// Suffixes, ordered so that a longer one is tried before a shorter one it ends
-/// with.
+/// Suffixes.
+///
+/// Each stands in the table once; as with the prefixes, the readers part
+/// `тельн` from `н` by measuring, so the table owes them no order.
 pub const SUFFIXES: &[&str] = &[
     "оват",
     "еват",
@@ -148,26 +153,12 @@ pub const SUFFIXES: &[&str] = &[
 pub const ENDINGS: &[&str] = &[
     "ыми", "ими", "ого", "его", "ому", "ему", "ами", "ями", "ешь", "ишь", "ете", "ите", "ает",
     "ают", "ует", "уют", "ой", "ей", "ый", "ий", "ая", "яя", "ое", "ее", "ые", "ие", "ом", "ем",
-    "ам", "ям", "ах", "ях", "ов", "ев", "ут", "ют", "ат", "ят", "ет", "ит", "ем", "им", "ть",
-    "ти", "чь", "ла", "ло", "ли", "ья", "ью", "а", "я", "о", "е", "ы", "и", "у", "ю", "ь"
+    "ам", "ям", "ах", "ях", "ов", "ев", "ут", "ют", "ат", "ят", "ет", "ит", "им", "ть", "ти",
+    "чь", "ла", "ло", "ли", "ья", "ью", "а", "я", "о", "е", "ы", "и", "у", "ю", "ь"
 ];
-
-/// The suffixes only a verb is built with.
-///
-/// A stem vowel and the mark of the past tense belong to verbs and to nothing
-/// else. Left in the common table they cut nouns apart: `учитель` came out as
-/// `учит` and the past-tense `л`, which is not a word anybody has written.
-pub const VERBAL_SUFFIXES: &[&str] = &["л", "ну", "ыва", "ива", "ова", "ева", "и", "а", "я", "е"];
 
 /// Postfixes, which stand after the ending.
 pub const POSTFIXES: &[&str] = &["ся", "сь", "то", "либо", "нибудь"];
-
-/// The postfixes that turn a verb back on itself.
-///
-/// A subset of the postfixes above, and the one a gate on reflexive verbs
-/// wants: `-то`, `-либо` and `-нибудь` are postfixes too and make a pronoun
-/// indefinite rather than a verb reflexive.
-pub const REFLEXIVE: &[&str] = &["ся", "сь"];
 
 /// Linking vowels, which join two roots in a compound.
 pub const INTERFIXES: &[&str] = &["о", "е"];
@@ -242,19 +233,18 @@ pub fn all_trailing<'t>(table: &[&'t str], text: &str) -> Vec<&'t str> {
 }
 
 #[cfg(test)]
-mod extra {
-    use super::{POSTFIXES, REFLEXIVE};
-
-    #[test]
-    fn every_reflexive_postfix_is_a_postfix() {
-        assert!(REFLEXIVE.iter().all(|held| POSTFIXES.contains(held)));
-        assert!(REFLEXIVE.len() < POSTFIXES.len());
-    }
-}
-
-#[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn no_table_lists_an_entry_twice() {
+        for table in [PREFIXES, SUFFIXES, ENDINGS, POSTFIXES, INTERFIXES] {
+            let mut seen = std::collections::HashSet::new();
+            for one in table {
+                assert!(seen.insert(one), "{one} is listed twice");
+            }
+        }
+    }
 
     #[test]
     fn longest_prefix_wins() {

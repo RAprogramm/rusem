@@ -82,6 +82,24 @@ impl Rule for NiTogether {
     }
 }
 
+/// § 90, пункт 2, as a rule.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NiTogetherAdverbs;
+
+impl Rule for NiTogetherAdverbs {
+    fn cites(&self) -> Citation {
+        ni_together::adverbs::CITES
+    }
+
+    fn scope(&self) -> Scope {
+        ni_together::adverbs::SCOPE
+    }
+
+    fn found(&self, facts: &Facts<'_>) -> Findings {
+        ni_together::adverbs::found(facts.writing.written)
+    }
+}
+
 /// § 3, which asks whether the word is a proper name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TsVowels;
@@ -214,6 +232,7 @@ pub const RULES: &[&dyn Rule] = &[
     &HyphenedParticle,
     &NeTogether,
     &NiTogether,
+    &NiTogetherAdverbs,
     &InterjectionComma
 ];
 
@@ -295,6 +314,7 @@ mod tests {
             particles::CITES,
             ne_together::pronouns::CITES,
             ni_together::pronouns::CITES,
+            ni_together::adverbs::CITES,
             interjection_comma::CITES
         ];
 
@@ -398,13 +418,13 @@ mod tests {
         let stress = Stressed::settled(crate::phonetics::stress::Stress::On(1));
         let held = Facts {
             writing: Writing {
-                written: "деревни",
+                written: "гение",
                 next:    None
             },
             about:   About {
                 form:   Form::Noun(crate::grammar::form::Agreed::Singular {
                     case:   crate::grammar::Case::Prepositional,
-                    gender: crate::grammar::Gender::Feminine
+                    gender: crate::grammar::Gender::Masculine
                 }),
                 stress: &stress,
                 native: true,
@@ -417,7 +437,7 @@ mod tests {
 
         let found = asked(&UnstressedEnding, &held);
         assert_eq!(found.len(), 1);
-        assert_eq!(found[0].instead, "деревне");
+        assert_eq!(found[0].instead, "гении");
     }
 
     #[test]

@@ -60,7 +60,6 @@ pub const SUBORDINATING: &[&str] = &[
     "когда",
     "коли",
     "коль",
-    "либо",
     "лишь",
     "нежели",
     "пока",
@@ -237,9 +236,9 @@ mod tests {
     }
 
     #[test]
-    fn a_word_that_is_both_is_in_both_lists() {
+    fn a_disjunctive_joins_equals_and_hangs_no_clause() {
         assert!(coordinates("либо"));
-        assert!(subordinates("либо"));
+        assert!(!subordinates("либо"));
     }
 
     #[test]

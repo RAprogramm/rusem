@@ -2,21 +2,27 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 72, пункт 5. Перед мягкой согласной знак не пишется.
+//! § 72. Перед мягкой согласной знак не пишется.
 //!
 //! Во всех прочих случаях перед мягкими согласными, в том числе перед ч и щ,
 //! буква ь не пишется: `кости`, `ранний`, `нянчить`, `кончик`, `каменщик`.
 //!
 //! Прочие — это все, кроме двух названных выше: кроме согласной, за которой
-//! мягкая при изменении слова твердеет, и кроме `л`, чью мягкость параграф
-//! пишет всегда. О мягкости самой согласной пункт не спрашивает — он
-//! запрещает знак перед мягкой, какова бы ни была первая.
+//! мягкая при изменении слова твердеет (пункт 1), и кроме `л`, чью мягкость
+//! параграф пишет всегда (пункт 2). О мягкости самой согласной правило не
+//! спрашивает — оно запрещает знак перед мягкой, какова бы ни была первая.
+//! В источнике этот запрет стоит вне нумерации, поэтому ссылка идёт на
+//! параграф целиком.
 
 use super::{After, stands, without_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(72, 5);
+/// Where this rule is written.
+///
+/// The closing prohibition is unnumbered prose in § 72 — only the two
+/// soft-before-soft cases carry numbers — so the citation is the paragraph
+/// whole.
+pub const CITES: Citation = Citation::whole(72);
 
 /// What this point is about.
 pub const SCOPE: Scope = scope::ANY;
@@ -59,9 +65,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_point_is_cited() {
+    fn the_paragraph_is_cited_whole() {
         assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 5);
+        assert_eq!(CITES.point, 0);
     }
 
     #[test]
@@ -79,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn the_letter_of_the_fourth_point_is_left_to_it() {
+    fn the_letter_of_the_l_point_is_left_to_it() {
         assert!(found("сельдь", 'л', After::Soft('д'), 2).is_empty());
     }
 

@@ -36,8 +36,11 @@ impl WordForm {
     /// # Errors
     ///
     /// Returns [`CoreError::UnusableWordForm`] when the input is empty, holds
-    /// whitespace, or holds a character outside the Cyrillic alphabet and the
-    /// inner hyphen.
+    /// whitespace or a character outside the Cyrillic alphabet, the hyphen and
+    /// the apostrophe, or when a hyphen or an apostrophe does not stand
+    /// between letters. The hyphen joins the written parts of one word —
+    /// `кто-нибудь` — and the apostrophe stands inside borrowed names —
+    /// `д'артаньян` — so neither can open or close a word.
     ///
     /// # Examples
     ///
@@ -76,6 +79,11 @@ impl WordForm {
                 reason: "not a single Cyrillic word"
             });
         }
+        if !joins_letters(&normalized) {
+            return Err(CoreError::UnusableWordForm {
+                reason: "a hyphen or apostrophe not between letters"
+            });
+        }
 
         Ok(Self(normalized))
     }
@@ -104,6 +112,28 @@ impl WordForm {
     pub fn char_len(&self) -> usize {
         self.0.chars().count()
     }
+}
+
+/// Reports whether every hyphen and apostrophe stands between letters.
+///
+/// Both signs join what is around them — the hyphen joins the written parts
+/// of one word, the apostrophe the pieces of a borrowed name — so a sign with
+/// no letter on either side joins nothing and the input is not a word.
+fn joins_letters(normalized: &str) -> bool {
+    let letters: Vec<char> = normalized.chars().collect();
+
+    letters.iter().enumerate().all(|(at, symbol)| {
+        crate::alphabet::is_letter(*symbol)
+            || (at
+                .checked_sub(1)
+                .and_then(|before| letters.get(before))
+                .copied()
+                .is_some_and(crate::alphabet::is_letter)
+                && letters
+                    .get(at + 1)
+                    .copied()
+                    .is_some_and(crate::alphabet::is_letter))
+    })
 }
 
 impl Display for WordForm {
@@ -275,6 +305,21 @@ mod tests {
     fn parsing_keeps_hyphenated_words() {
         let form = WordForm::parse("кто-нибудь").expect("valid form");
         assert_eq!(form.as_str(), "кто-нибудь");
+    }
+
+    #[test]
+    fn parsing_keeps_an_apostrophe_between_letters() {
+        let form = WordForm::parse("д'Артаньян").expect("valid form");
+        assert_eq!(form.as_str(), "д'артаньян");
+    }
+
+    #[test]
+    fn a_sign_that_joins_no_letters_is_rejected() {
+        assert!(WordForm::parse("-стол").is_err());
+        assert!(WordForm::parse("стол-").is_err());
+        assert!(WordForm::parse("---").is_err());
+        assert!(WordForm::parse("'стол").is_err());
+        assert!(WordForm::parse("кто--нибудь").is_err());
     }
 
     #[test]

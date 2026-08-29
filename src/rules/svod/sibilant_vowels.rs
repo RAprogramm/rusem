@@ -20,7 +20,10 @@ use crate::{
 };
 
 /// Where this rule is written.
-pub const CITES: Citation = Citation::point(1, 1);
+///
+/// The paragraph is a single statement with no numbered points, so it is
+/// cited whole.
+pub const CITES: Citation = Citation::whole(1);
 
 /// What this rule is about.
 ///

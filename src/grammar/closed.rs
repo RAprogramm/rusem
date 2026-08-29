@@ -43,11 +43,18 @@ pub use self::{
     pronoun::{Class as PronounClass, DEMONSTRATIVE, PERSONAL, POSSESSIVE}
 };
 
-/// Reports whether a written word belongs to any closed class.
+/// Reports whether a written word is a function word.
 ///
-/// A word that does is a function word: the sense gate skips it, because a
-/// dictionary defines `и` and `в` in a way no engine can use, and agreement
-/// and government say everything about them that matters.
+/// The grammars call three closed classes function words — the prepositions,
+/// the conjunctions and the particles: they name nothing of their own and only
+/// relate or shade what does. The sense gate skips them, because a dictionary
+/// defines `и` and `в` in a way no engine can use, and agreement and
+/// government say everything about them that matters.
+///
+/// The other closed classes answer false on purpose. A pronoun or a
+/// pronominal adverb stands in for a content word and fills its place in the
+/// sentence, and an interjection stands outside the sentence altogether;
+/// closed is not the same as functional.
 #[must_use]
 pub fn is_function_word(written: &str) -> bool {
     let held = written.to_lowercase();
@@ -95,7 +102,9 @@ mod tests {
             adverb::POSSESSIVE,
             parenthetical::ALWAYS,
             parenthetical::NEVER,
-            parenthetical::EITHER
+            parenthetical::EITHER,
+            PERSONAL,
+            pronoun::REFLEXIVE
         ] {
             for held in class {
                 assert!(
@@ -122,5 +131,13 @@ mod tests {
         assert!(!is_function_word("стол"));
         assert!(!is_function_word("читать"));
         assert!(!is_function_word(""));
+    }
+
+    #[test]
+    fn a_closed_class_that_stands_in_for_content_is_not_functional() {
+        assert!(!is_function_word("он"));
+        assert!(!is_function_word("там"));
+        assert!(!is_function_word("ах"));
+        assert!(!is_function_word("двое"));
     }
 }

@@ -7,23 +7,21 @@
 //! `Эй, поберегись!`, `Увы, он не придёт`. The interjection stands outside the
 //! sentence, and the comma is what says so.
 //!
-//! # Where the exceptions come from
+//! # Where the exception comes from, and why it is a refusal
 //!
-//! The paragraph excepts two cases, and neither is a list of words. Both are
-//! read off what stands next to the interjection.
+//! The paragraph's примечание says that some of the same words are not
+//! interjections at all but particles, and those take no comma: `о` when it
+//! opens an address — `О поле, поле` — and `ну`, `ах`, `ох` when they carry
+//! усилительный оттенок — `Ох ты гой еси`, `Ну и денёк!`.
 //!
-//! `О поле, поле` takes no comma after `о`, because `о` there opens an
-//! address and the address is what it opens onto. The same `о` in `О, как
-//! хорошо` takes one. The word did not change; what followed it did.
-//!
-//! `Ах ты!`, `Ну и денёк!`, `Ох ты гой еси` take none either, because the
-//! interjection and the word after it are one exclamation rather than two
-//! things needing parting. Again the following word decides: `Ах, как жаль`
-//! takes its comma.
-//!
-//! So the rule reads the pair, not the word. That is why it can be asked about
-//! an interjection it has never met — the shape of the exception does not
-//! depend on which interjection stands in it.
+//! What separates the particle from the interjection is the use, not the
+//! writing. The paragraph's own examples show the same word both ways: `Ох,
+//! уж эти мне ребята!` keeps its comma while `Ох ты гой еси` takes none, and
+//! `о` opens an address in `О поле` but exclaims in `О, вы были ребенок
+//! резвый`. A pair of written words does not state which use it holds, so for
+//! the words the note names the rule answers nothing rather than either way.
+//! Every other interjection is outside the note and keeps the main rule's
+//! comma: `Эй, поберегись!`, `Увы, он не придёт`.
 
 use crate::{
     grammar::closed::interjection,
@@ -36,12 +34,13 @@ pub const CITES: Citation = Citation::whole(157);
 /// What this rule is about.
 pub const SCOPE: Scope = scope::ANY;
 
-/// The words that make an exclamation of the interjection before them.
+/// The words the примечание of § 157 says may be particles instead.
 ///
-/// `Ах ты!`, `Ну и денёк!`, `Ох ты гой еси`. Each is a particle or a pronoun
-/// that leans on what comes before it and cannot open anything of its own, so
-/// nothing stands between it and the interjection for a comma to divide.
-const LEANING: &[&str] = &["ты", "и", "же", "уж", "вы"];
+/// The note enumerates them: `о`, употребляемая при обращении, and `ну`,
+/// `ах`, `ох`, употребляемые для выражения усилительного оттенка. Its
+/// `и т. п.` leaves the class open, but nothing in the writing derives a
+/// further member, so the rule keeps to the words the source itself names.
+const PARTICLES_TOO: &[&str] = &["о", "ну", "ах", "ох"];
 
 /// Reports whether a written word is an interjection this paragraph speaks of.
 ///
@@ -66,8 +65,10 @@ pub fn speaks_of(written: &str) -> bool {
 
 /// Reports whether the interjection is parted from what follows by a comma.
 ///
-/// [`None`] when the word is no interjection, so that a caller can tell a word
-/// the paragraph says nothing about from one it excepts.
+/// [`None`] when the paragraph gives the core no answer: the word is no
+/// interjection, or it is one of the words the примечание says may be a
+/// particle — there the comma follows the use, which the written pair does
+/// not state, so the rule refuses rather than guesses either way.
 ///
 /// # Examples
 ///
@@ -75,7 +76,7 @@ pub fn speaks_of(written: &str) -> bool {
 /// use rusem::rules::svod::interjection_comma::parted_from;
 ///
 /// assert_eq!(parted_from("увы", Some("он")), Some(true));
-/// assert_eq!(parted_from("ах", Some("ты")), Some(false));
+/// assert_eq!(parted_from("ах", Some("ты")), None);
 /// assert_eq!(parted_from("стол", Some("стоит")), None);
 /// ```
 #[must_use]
@@ -86,23 +87,20 @@ pub fn parted_from(written: &str, next: Option<&str>) -> Option<bool> {
     let Some(following) = next else {
         return Some(false);
     };
+    if unsettled(written, following) {
+        return None;
+    }
 
-    Some(!leans(following) && !addresses(written, following))
+    Some(true)
 }
 
-/// Reports whether a word makes one exclamation of the interjection before it.
-fn leans(following: &str) -> bool {
-    LEANING.contains(&following.to_lowercase().as_str())
-}
-
-/// Reports whether the interjection opens an address rather than standing
-/// alone.
+/// Reports whether the pair is one the примечание leaves undecidable.
 ///
-/// Only `о` does this, and the paragraph says so: `О поле, поле`, `О други`.
-/// The other interjections are parted from an address like anything else —
-/// `Эй, друзья` keeps its comma.
-fn addresses(written: &str, following: &str) -> bool {
-    written.to_lowercase() == "о" && !following.is_empty()
+/// A word the note names may be the interjection — comma — or the particle —
+/// none — and only its use in the sentence tells them apart. With a word
+/// following, both readings are open, and the letters do not choose.
+fn unsettled(written: &str, following: &str) -> bool {
+    PARTICLES_TOO.contains(&written.to_lowercase().as_str()) && !following.is_empty()
 }
 
 /// What the paragraph says when it is broken.
@@ -111,7 +109,9 @@ const SAYS: &str = "междометие отделяется запятой о�
 /// What the paragraph finds in an interjection and what follows it.
 ///
 /// The finding is the pair written with the comma the paragraph requires. A
-/// word that is no interjection is outside the paragraph and nothing is found.
+/// word that is no interjection is outside the paragraph, and a word the
+/// примечание says may be a particle is refused rather than judged — in
+/// either case nothing is found.
 ///
 /// # Examples
 ///
@@ -177,20 +177,17 @@ mod tests {
     fn an_interjection_is_parted_by_a_comma() {
         assert_eq!(parted_from("увы", Some("он")), Some(true));
         assert_eq!(parted_from("эй", Some("поберегись")), Some(true));
-        assert_eq!(parted_from("ах", Some("как")), Some(true));
+        assert_eq!(parted_from("эй", Some("вы")), Some(true));
     }
 
     #[test]
-    fn a_leaning_word_makes_one_exclamation_and_takes_no_comma() {
-        assert_eq!(parted_from("ах", Some("ты")), Some(false));
-        assert_eq!(parted_from("ну", Some("и")), Some(false));
-        assert_eq!(parted_from("ох", Some("ты")), Some(false));
-    }
-
-    #[test]
-    fn the_o_of_an_address_takes_no_comma() {
-        assert_eq!(parted_from("о", Some("поле")), Some(false));
-        assert_eq!(parted_from("о", Some("други")), Some(false));
+    fn a_word_the_note_names_is_not_judged_before_another_word() {
+        assert_eq!(parted_from("ах", Some("ты")), None);
+        assert_eq!(parted_from("ну", Some("и")), None);
+        assert_eq!(parted_from("ох", Some("ты")), None);
+        assert_eq!(parted_from("ох", Some("уж")), None);
+        assert_eq!(parted_from("о", Some("поле")), None);
+        assert_eq!(parted_from("о", Some("как")), None);
     }
 
     #[test]
@@ -201,11 +198,12 @@ mod tests {
     #[test]
     fn an_interjection_with_nothing_after_it_parts_from_nothing() {
         assert_eq!(parted_from("увы", None), Some(false));
+        assert_eq!(parted_from("ох", None), Some(false));
     }
 
     #[test]
     fn the_case_a_word_is_written_in_does_not_matter() {
-        assert_eq!(parted_from("АХ", Some("ТЫ")), Some(false));
+        assert_eq!(parted_from("АХ", Some("ТЫ")), None);
         assert_eq!(parted_from("Увы", Some("он")), Some(true));
     }
 }

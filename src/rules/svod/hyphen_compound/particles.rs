@@ -22,7 +22,7 @@
 //!
 //! Note 1 says `кое-кто` before a preposition falls into three words: `кое у
 //! кого`, `кое в чём`. The hyphen is what joins, and a preposition unjoins.
-//! [`required`] therefore reports only a run of two words.
+//! [`found`] therefore reports only a run of two words.
 
 use crate::{
     grammar::closed::asking,
@@ -39,7 +39,14 @@ pub const SCOPE: Scope = scope::ANY;
 const LEADING: &[&str] = &["кое", "кой"];
 
 /// The particles the paragraph writes behind.
-const TRAILING: &[&str] = &["нибудь", "либо", "тка", "ка", "то", "де", "с"];
+///
+/// The paragraph also names `-с` — `да-с` — but a free-standing `с` is
+/// spelled the same as the preposition, which stands after an asking word in
+/// ordinary Russian: `как с этим быть`, `кто с тобой`. A pair of written
+/// words does not say which of the two it holds, so the particle `-с` is not
+/// judged here: the rule would flag correct Russian, and a fact the core
+/// cannot derive stays unstated.
+const TRAILING: &[&str] = &["нибудь", "либо", "тка", "ка", "то", "де"];
 
 /// What the paragraph says when it is broken.
 const SAYS: &str = "частицы кое-, -то, -либо, -нибудь пишутся через дефис";
@@ -141,6 +148,12 @@ mod tests {
         assert!(found("на столе").is_empty());
         assert!(found("стол то").is_empty());
         assert!(found("").is_empty());
+    }
+
+    #[test]
+    fn the_preposition_spelled_like_the_particle_s_is_not_judged() {
+        assert!(found("как с").is_empty());
+        assert!(found("кто с").is_empty());
     }
 
     #[test]

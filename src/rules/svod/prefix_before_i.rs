@@ -8,11 +8,13 @@
 //! The prefix ends in a consonant, the root begins in `и`, and the spelling
 //! follows the pronunciation.
 //!
-//! Three sets of prefixes are excepted. `меж-` and `сверх-` keep the `и` —
-//! `межирригационный`, `сверхизысканный` — because § 1 refuses `ы` after `ж`
-//! and `х` anyway. The foreign prefixes `пан-`, `суб-`, `транс-`, `контр-` and
-//! the like keep it too: `панисламизм`, `субинспектор`, `Трансиордания`. And
-//! `взимать` keeps it because the `и` is pronounced.
+//! Three sets of prefixes are excepted. `меж-` and `сверх-` keep the `и` by
+//! the paragraph's own first point — `межирригационный`, `сверхизысканный`;
+//! for `меж-` the same follows from § 1, which refuses `ы` after `ж`, while
+//! `х` is no sibilant and § 1 says nothing of it. The foreign prefixes
+//! `пан-`, `суб-`, `транс-`, `контр-` and the like keep it by the second
+//! point: `панисламизм`, `субинспектор`, `Трансиордания`. And `взимать` keeps
+//! it because the `и` is pronounced.
 
 use crate::{
     alphabet::is_vowel,
@@ -35,7 +37,8 @@ pub const SCOPE: Scope = Scope {
 
 /// The prefixes that keep the `и` after them.
 ///
-/// `меж-` and `сверх-` by § 1, the foreign ones by the paragraph's own note.
+/// `меж-` and `сверх-` by the paragraph's first point, the foreign ones by
+/// its second, an open class the point closes with `и т. п.`.
 /// The seam belongs to the last prefix of a chain, so a stacked word is asked
 /// about the prefix it ends with: `сверхбезыдейный` turns by `без`, and a
 /// word ending its chain in `сверх` would keep.

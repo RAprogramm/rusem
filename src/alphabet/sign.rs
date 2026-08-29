@@ -12,14 +12,18 @@
 //! softening what came before: `съесть`, `объехать`, `предъявить` (§ 70).
 
 /// One of the two signs.
+///
+/// The variants stand in the order of the alphabet — `ъ` at place 27, `ь` at
+/// place 29 — so the derived ordering agrees with the dictionary order the
+/// letters sort by, as the vowels and the consonants already do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum Sign {
-    /// `ь`, which softens the consonant before it.
-    Soft,
     /// `ъ`, which parts a prefix from a soft vowel.
-    Hard
+    Hard,
+    /// `ь`, which softens the consonant before it.
+    Soft
 }
 
 impl Sign {
@@ -113,6 +117,16 @@ mod tests {
             assert_eq!(Sign::try_from(written), Ok(held));
             assert_eq!(held.to_string(), written.to_string());
         }
+    }
+
+    #[test]
+    fn the_signs_sort_in_the_order_of_the_alphabet() {
+        assert!(Sign::Hard < Sign::Soft, "ъ stands before ь in the alphabet");
+        assert_eq!(
+            Sign::Hard.cmp(&Sign::Soft),
+            crate::alphabet::Letter::Sign(Sign::Hard)
+                .cmp(&crate::alphabet::Letter::Sign(Sign::Soft))
+        );
     }
 
     #[test]

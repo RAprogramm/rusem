@@ -98,7 +98,10 @@ pub fn written(
 ) -> Option<String> {
     let opens = opens(lemma);
     let base = stem::of(lemma, gender, index)?;
-    let stressed = matches!(falls::on(index.accent, case, number), Falls::Ending);
+    let stressed = matches!(
+        falls::on(index.accent, case, number, animacy),
+        Falls::Ending
+    );
     let parted = index.fleeting;
     let base = if parted {
         fleeting::of(
@@ -127,7 +130,7 @@ pub fn written(
             opens,
             parted
         }
-    )?;
+    );
     let base = unstressed(&base, stressed && !held.is_empty());
 
     Some(base.clone() + &spelling::fitted(&base, held, stressed))

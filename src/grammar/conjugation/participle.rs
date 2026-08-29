@@ -19,7 +19,7 @@
 
 use crate::grammar::{
     Number, Person, Tense, Voice,
-    conjugation::{inflect, stems},
+    conjugation::{class, inflect, stems},
     declension::spelling,
     form::verb::VerbForm
 };
@@ -97,7 +97,7 @@ fn acting(infinitive: &str) -> Option<String> {
 
 /// The stem of the active past, whose suffix the last sound of the stem picks.
 fn acted(infinitive: &str) -> Option<String> {
-    let stem = stems::past(infinitive)?;
+    let stem = stems::past(infinitive, class::of(infinitive))?;
     let suffix = match stem.chars().last() {
         Some(last) if crate::alphabet::is_vowel(last) => AFTER_VOWEL,
         _ => AFTER_CONSONANT
@@ -124,5 +124,5 @@ fn done(infinitive: &str) -> Option<String> {
         return None;
     }
 
-    Some(stems::past(infinitive)? + DONE)
+    Some(stems::past(infinitive, class::of(infinitive))? + DONE)
 }

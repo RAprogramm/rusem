@@ -12,11 +12,7 @@
 //! A word of one syllable takes no mark. Neither does a word holding `ё`,
 //! which is stressed by its own spelling.
 
-use std::{
-    borrow::ToOwned,
-    string::{String, ToString},
-    vec::Vec
-};
+use std::{borrow::ToOwned, string::String, vec::Vec};
 
 use crate::phonetics::stress::table::Table;
 
@@ -48,9 +44,17 @@ pub struct Marked {
 ///
 /// A word of one syllable has nowhere else to put the stress, and a word
 /// holding `ё` is already marked: that letter is stressed by its own spelling.
+/// That fact belongs to the vowel and is read off
+/// [`crate::alphabet::Vowel::is_stressed`] rather than restated here, so a
+/// capital `Ё` counts the same as a small one — the alphabet folds the case.
 #[must_use]
 pub fn needs_mark(word: &str) -> bool {
-    syllables(word) > 1 && !word.contains('ё')
+    syllables(word) > 1
+        && !word
+            .chars()
+            .filter_map(crate::alphabet::Letter::of)
+            .filter_map(crate::alphabet::Letter::vowel)
+            .any(crate::alphabet::Vowel::is_stressed)
 }
 
 /// Places the stress over one word.
@@ -87,11 +91,18 @@ pub fn place_word(table: &Table, word: &str, reading: Option<&Reading>) -> Marke
         };
     };
 
-    Marked {
-        written: marked(word, vowel),
-        placed: true,
-        homograph
-    }
+    marked(word, vowel).map_or_else(
+        || Marked {
+            written: word.to_owned(),
+            placed: false,
+            homograph
+        },
+        |written| Marked {
+            written,
+            placed: true,
+            homograph
+        }
+    )
 }
 
 /// Places the stress over a whole text.
@@ -196,21 +207,24 @@ fn agreed(placements: &[&crate::phonetics::stress::table::Placement]) -> Option<
 use crate::alphabet::syllables;
 
 /// Inserts the mark after one vowel of a word.
-fn marked(word: &str, vowel: usize) -> String {
+///
+/// Answers nothing when the index names no character of the word: a table row
+/// may point beyond the spelling it was read against, and a mark that was
+/// never written must not be reported as placed. The caller turns the refusal
+/// into a bare word rather than a lying one.
+fn marked(word: &str, vowel: usize) -> Option<String> {
     let mut written = String::with_capacity(word.len() + ACUTE.len_utf8());
+    let mut placed = false;
 
     for (position, letter) in word.chars().enumerate() {
         written.push(letter);
         if position == vowel {
             written.push(ACUTE);
+            placed = true;
         }
     }
 
-    if written.chars().any(|letter| letter == ACUTE) {
-        written
-    } else {
-        word.to_string()
-    }
+    placed.then_some(written)
 }
 
 #[cfg(test)]
@@ -325,9 +339,30 @@ mod tests {
 
     #[test]
     fn a_mark_asked_for_beyond_the_last_vowel_leaves_the_word_alone() {
-        let held = place_word(&Table::default(), "вода", None);
+        let mut of = std::collections::HashMap::new();
+        of.insert(
+            "вода".to_string(),
+            vec![Placement {
+                reading: Reading {
+                    lemma: "вода".to_string(),
+                    tags:  Vec::new()
+                },
+                vowel:   9,
+                article: 0
+            }]
+        );
+
+        let held = place_word(&Table::from_parts(of), "вода", None);
 
         assert_eq!(held.written, "вода");
+        assert!(!held.placed, "no mark was written, and the answer says so");
+    }
+
+    #[test]
+    fn a_word_holding_jo_needs_no_mark_whatever_its_case() {
+        assert!(!needs_mark("полёт"));
+        assert!(!needs_mark("ПОЛЁТ"));
+        assert!(needs_mark("вода"));
     }
 
     #[test]

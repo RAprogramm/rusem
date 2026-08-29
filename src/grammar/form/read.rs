@@ -57,7 +57,8 @@ pub fn form(tag: &GrammarTag) -> Option<Form> {
             bare(tag).map(|held| Form::Adjective(Adjectival::Short(held)))
         }
         PartOfSpeech::Comparative => Some(Form::Adjective(Adjectival::Compared)),
-        PartOfSpeech::Adverb | PartOfSpeech::Predicative => Some(Form::Adverb),
+        PartOfSpeech::Adverb => Some(Form::Adverb),
+        PartOfSpeech::Predicative => Some(Form::Predicative),
         PartOfSpeech::Preposition => Some(Form::Preposition),
         PartOfSpeech::Conjunction => Some(Form::Conjunction),
         PartOfSpeech::Particle => Some(Form::Particle),
@@ -267,6 +268,18 @@ mod tests {
         };
 
         assert_eq!(form(&held).and_then(Form::case), Some(Case::Dative));
+    }
+
+    #[test]
+    fn a_predicative_is_read_as_itself_and_not_as_an_adverb() {
+        let held = form(&tag(PartOfSpeech::Predicative));
+
+        assert_eq!(held, Some(Form::Predicative));
+        assert_eq!(
+            held.map(Form::part_of_speech),
+            Some(PartOfSpeech::Predicative),
+            "the part of speech survives the round trip"
+        );
     }
 
     #[test]

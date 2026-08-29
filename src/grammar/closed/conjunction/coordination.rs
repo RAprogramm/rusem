@@ -27,13 +27,18 @@ pub enum Sense {
 }
 
 /// The conjunctions that add.
-pub const CONNECTIVE: &[&str] = &["и", "также", "тоже"];
+///
+/// `ни` is here because `ни…ни` adds under negation: `ни он, ни она не
+/// пришли` denies both, which is the second put beside the first, not a
+/// choice between them. The grammars list `ни…ни` with `и` and `тоже` among
+/// the connective conjunctions for that reason.
+pub const CONNECTIVE: &[&str] = &["и", "ни", "также", "тоже"];
 
 /// The conjunctions that oppose.
 pub const ADVERSATIVE: &[&str] = &["а", "же", "зато", "но", "однако"];
 
 /// The conjunctions that offer a choice.
-pub const DISJUNCTIVE: &[&str] = &["или", "либо", "ни"];
+pub const DISJUNCTIVE: &[&str] = &["или", "либо"];
 
 /// The conjunctions that say the second on top of the first.
 pub const ATTACHING: &[&str] = &["притом", "причём"];
@@ -145,6 +150,12 @@ mod tests {
         assert_eq!(senses("но"), std::vec![Sense::Adversative]);
         assert_eq!(senses("или"), std::vec![Sense::Disjunctive]);
         assert_eq!(senses("притом"), std::vec![Sense::Attaching]);
+    }
+
+    #[test]
+    fn the_doubled_denial_adds_rather_than_offers_a_choice() {
+        assert_eq!(senses("ни"), std::vec![Sense::Connective]);
+        assert!(!joins_in("ни", Sense::Disjunctive));
     }
 
     #[test]

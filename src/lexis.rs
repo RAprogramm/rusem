@@ -22,6 +22,8 @@
 //! | --- | --- |
 //! | [`lexeme`] | what a word is, whatever form it takes |
 //! | [`paradigm`] | the cells a word has and what is written in them |
+//! | [`reading`] | the way back: which cells a written form fills |
+//! | [`word`] | the lexeme and its spelling held together |
 
 pub mod lexeme;
 pub mod paradigm;

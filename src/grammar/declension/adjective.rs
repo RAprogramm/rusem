@@ -45,6 +45,19 @@ pub fn parted(dictionary: &str) -> Option<(String, Stem)> {
     Some((base, shape))
 }
 
+/// Reports whether the dictionary form says the endings carry the stress.
+///
+/// The masculine nominative writes the stressed hard ending `-ой` and the
+/// unstressed one `-ый` or `-ий` — Zaliznyak's schemes `b` and `a` — so the
+/// dictionary form itself states where the stress falls, and the whole
+/// paradigm follows it: `большой` keeps the `о` of `большого` that the
+/// sibilant would bend to `е` off the stress, as `хороший` bends it in
+/// `хорошего`.
+#[must_use]
+pub fn ending_stressed(dictionary: &str) -> bool {
+    dictionary.ends_with("ой")
+}
+
 /// The agreeing word written out in the cell asked for.
 ///
 /// The animacy is asked for because the accusative repeats the nominative for
@@ -83,7 +96,8 @@ pub fn written(
     animacy: Animacy
 ) -> Option<String> {
     let (base, shape) = parted(dictionary)?;
-    let table = attributive::table(shape, gender, number);
+    let stressed = ending_stressed(dictionary);
+    let table = attributive::table(shape, gender, number, stressed);
 
-    Some(base.clone() + &spelling::fitted(&base, table.of(case, animacy), false))
+    Some(base.clone() + &spelling::fitted(&base, table.of(case, animacy), stressed))
 }

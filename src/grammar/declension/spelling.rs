@@ -78,8 +78,9 @@ const fn bars_unstressed_o(letter: char) -> bool {
 /// The vowel is `о` where one of the two consonants is a back one — `окно`
 /// gives `окон`, `кукла` gives `кукол`, `сумка` gives `сумок` — and `е`
 /// everywhere else: `сосна` gives `сосен`, `письмо` gives `писем`, `овца`
-/// gives `овец`. Under the stress that `е` is written `ё`: `кочерга` gives
-/// `кочерёг`.
+/// gives `овец`. Under the stress that `е` is written `ё` — `кочерга` gives
+/// `кочерёг` — and after a sibilant § 18 writes it `о`: `кишка` gives
+/// `кишок`, `княжна` gives `княжон`.
 #[must_use]
 pub fn parted(stem: &str, stressed: bool) -> String {
     let letters: Vec<char> = stem.chars().collect();
@@ -116,7 +117,14 @@ const GLIDE: char = 'й';
 
 /// The vowel that parts two consonants.
 const fn parting(before: char, last: char, stressed: bool) -> char {
-    if softens(before) || softens(last) || before == GLIDE {
+    if softens(last) || before == GLIDE {
+        return 'е';
+    }
+    if softens(before) {
+        if stressed {
+            return 'о';
+        }
+
         return 'е';
     }
     if backs(before) {
@@ -132,12 +140,13 @@ const fn parting(before: char, last: char, stressed: bool) -> char {
     'е'
 }
 
-/// Reports whether a consonant makes the parting vowel е rather than о.
-/// Reports whether a consonant is one that takes `е` after it whatever
-/// follows.
+/// Reports whether a consonant is a sibilant or `ц`.
 ///
-/// A sibilant and `ц`, on either side of the parting: `бабочка` gives
-/// `бабочек` and not `бабочок`, `сердце` gives `сердец` and not `сердёц`.
+/// Standing after the parting vowel it makes the vowel `е` whatever the
+/// stress: `овца` gives `ове́ц`, `кольцо` gives `коле́ц`, `сердце` gives
+/// `серде́ц`. Standing before it, § 18 lets the stress decide the letter of
+/// the vowel it governs: `е` off the stress — `бабочек`, `кошек` — and `о`
+/// under it — `кишо́к`, `княжо́н`.
 const fn softens(letter: char) -> bool {
     match Letter::of(letter) {
         Some(Letter::Consonant(held)) => held.is_sibilant() || matches!(held, Consonant::Tse),
@@ -175,4 +184,32 @@ pub fn merged(stem: &str) -> Option<String> {
     let mut written: String = letters.iter().take(count - 2).collect();
     written.push(last);
     Some(written)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_stressed_parting_vowel_after_a_sibilant_is_written_o() {
+        assert_eq!(parted("кишк", true), "кишок");
+        assert_eq!(parted("княжн", true), "княжон");
+    }
+
+    #[test]
+    fn an_unstressed_parting_vowel_after_a_sibilant_stays_e() {
+        assert_eq!(parted("кошк", false), "кошек");
+        assert_eq!(parted("бабочк", false), "бабочек");
+    }
+
+    #[test]
+    fn a_parting_vowel_before_a_sibilant_is_e_whatever_the_stress() {
+        assert_eq!(parted("овц", true), "овец");
+        assert_eq!(parted("овц", false), "овец");
+    }
+
+    #[test]
+    fn a_stressed_parting_vowel_elsewhere_is_written_yo() {
+        assert_eq!(parted("кочерг", true), "кочерёг");
+    }
 }

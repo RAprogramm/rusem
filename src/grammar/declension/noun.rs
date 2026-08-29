@@ -9,8 +9,8 @@
 //! written word rather than about the pattern:
 //!
 //! a stem that ends in the glide takes `и` where the table says `е` — `о
-//! гении`, `в армии`, `о собрании`, § 33; the eleven mixed nouns grow `-ен-`
-//! before every ending but the nominative; and a sibilant refuses the vowels
+//! гении`, `в армии`, `о собрании`, § 33; the ten mixed nouns in `-мя` grow
+//! `-ен-` where their paradigm asks for it; and a sibilant refuses the vowels
 //! the table would otherwise put after it.
 
 use crate::grammar::{
@@ -63,9 +63,21 @@ pub fn ending(
     if number == Number::Singular && declension::on_glide(nominative) && softened(case, pattern) {
         return Some("и");
     }
+    if held == "ён" && GROWN_WITH_YA.contains(&nominative) {
+        return Some("ян");
+    }
 
     Some(held)
 }
+
+/// The two mixed nouns whose genitive plural growth is written with `я`.
+///
+/// Zaliznyak's dictionary marks `семя` and `стремя` apart from the other
+/// eight nouns in `-мя`: `семян` and `стремян` against `времён`, `имён`,
+/// `знамён`. The departure is this one ending, so it is replaced wherever the
+/// paradigm reads it — the genitive plural and the cells that repeat it —
+/// and the dictionary enumerates exactly these two words.
+const GROWN_WITH_YA: &[&str] = &["семя", "стремя"];
 
 /// Reports whether a cell is one the glide softens.
 ///
@@ -82,52 +94,87 @@ const fn softened(case: Case, pattern: Declension) -> bool {
 
 /// The stem a noun's endings are added to.
 ///
-/// A mixed noun in `-мя` grows before every ending but the nominative and the
-/// accusative, and the growth belongs to the stem rather than to the ending:
-/// `время` gives `времен-` and then `-и`, `-ем`.
+/// A mixed noun in `-мя` grows where its paradigm asks for it, and the growth
+/// belongs to the stem rather than to the ending: `время` gives `времен-` and
+/// then `-и`, `-ем`. The animacy is asked for because the plural accusative
+/// has no row of its own, and which row it repeats decides whether the stem
+/// is grown. `путь` is mixed and grows nothing.
 ///
 /// # Examples
 ///
 /// ```
-/// use rusem::grammar::{Case, Gender, Number, declension::noun::stem};
+/// use rusem::grammar::{Animacy, Case, Gender, Number, declension::noun::stem};
 ///
-/// assert_eq!(
-///     stem("время", Gender::Neuter, Case::Genitive, Number::Singular).as_deref(),
-///     Some("времен")
+/// let one = stem(
+///     "время",
+///     Gender::Neuter,
+///     Animacy::Inanimate,
+///     Case::Genitive,
+///     Number::Singular
 /// );
-/// assert_eq!(
-///     stem("время", Gender::Neuter, Case::Genitive, Number::Plural).as_deref(),
-///     Some("врем")
+/// assert_eq!(one.as_deref(), Some("времен"));
+///
+/// let bare = stem(
+///     "время",
+///     Gender::Neuter,
+///     Animacy::Inanimate,
+///     Case::Genitive,
+///     Number::Plural
 /// );
-/// assert_eq!(
-///     stem("время", Gender::Neuter, Case::Nominative, Number::Singular).as_deref(),
-///     Some("врем")
+/// assert_eq!(bare.as_deref(), Some("врем"));
+///
+/// let grown = stem(
+///     "время",
+///     Gender::Neuter,
+///     Animacy::Inanimate,
+///     Case::Nominative,
+///     Number::Plural
 /// );
+/// assert_eq!(grown.as_deref(), Some("времен"));
 /// ```
 #[must_use]
-pub fn stem(nominative: &str, gender: Gender, case: Case, number: Number) -> Option<String> {
+pub fn stem(
+    nominative: &str,
+    gender: Gender,
+    animacy: Animacy,
+    case: Case,
+    number: Number
+) -> Option<String> {
     let pattern = declension::of(nominative, gender);
     let bare = bare_stem(nominative, pattern)?;
 
-    if !matches!(pattern, Declension::Mixed) || !grows(case, number) {
+    if !matches!(pattern, Declension::Mixed)
+        || !nominative.ends_with("мя")
+        || !grows(case, number, animacy)
+    {
         return Some(bare);
     }
 
     Some(bare + declension::GROWTH)
 }
 
-/// Reports whether a mixed noun grows its stem in this cell.
+/// Reports whether a mixed noun in `-мя` grows its stem in this cell.
 ///
-/// Everywhere but the nominative and the accusative, which keep the bare stem,
-/// and the genitive plural, whose ending carries the growth in itself:
-/// `времён` is `врем-` and `-ён`, and growing the stem as well would write it
-/// twice.
-const fn grows(case: Case, number: Number) -> bool {
-    if matches!(case.merged(), Case::Nominative | Case::Accusative) {
-        return false;
+/// The singular keeps the bare stem in the nominative and the accusative,
+/// whose endings the paradigm states on it — `время` — and the vocative reads
+/// the nominative's row. The plural grows throughout — `времена`, `временам`
+/// — except the genitive, whose ending carries the growth in itself: `времён`
+/// is `врем-` and `-ён`, and growing the stem as well would write it twice.
+/// The plural accusative states no row of its own, so it grows as the row it
+/// repeats does: the nominative's for a thing, the genitive's for a living
+/// being.
+const fn grows(case: Case, number: Number, animacy: Animacy) -> bool {
+    match number {
+        Number::Singular => !matches!(
+            case.merged(),
+            Case::Nominative | Case::Vocative | Case::Accusative
+        ),
+        Number::Plural => match case.merged() {
+            Case::Genitive => false,
+            Case::Accusative => matches!(animacy, Animacy::Inanimate),
+            _ => true
+        }
     }
-
-    !matches!((case.merged(), number), (Case::Genitive, Number::Plural))
 }
 
 /// The dictionary form without the ending it carries.
@@ -198,7 +245,7 @@ pub fn written(
     case: Case,
     number: Number
 ) -> Option<String> {
-    let base = stem(nominative, gender, case, number)?;
+    let base = stem(nominative, gender, animacy, case, number)?;
     let held = ending(nominative, gender, animacy, case, number)?;
 
     Some(base.clone() + &spelling::fitted(&base, held, false))
@@ -285,5 +332,85 @@ mod tests {
     #[test]
     fn an_indeclinable_noun_takes_no_ending() {
         assert_eq!(one("пальто", Gender::Feminine, Case::Genitive), None);
+    }
+
+    fn many(nominative: &str, gender: Gender, case: Case) -> Option<String> {
+        written(nominative, gender, Animacy::Inanimate, case, Number::Plural)
+    }
+
+    #[test]
+    fn a_mixed_noun_grows_through_the_whole_plural() {
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Nominative).as_deref(),
+            Some("времена")
+        );
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Accusative).as_deref(),
+            Some("времена")
+        );
+        assert_eq!(
+            many("имя", Gender::Neuter, Case::Nominative).as_deref(),
+            Some("имена")
+        );
+    }
+
+    #[test]
+    fn the_plural_obliques_of_a_mixed_noun_are_hard() {
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Dative).as_deref(),
+            Some("временам")
+        );
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Instrumental).as_deref(),
+            Some("временами")
+        );
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Prepositional).as_deref(),
+            Some("временах")
+        );
+    }
+
+    #[test]
+    fn the_two_sown_nouns_write_their_genitive_plural_with_ya() {
+        assert_eq!(
+            many("семя", Gender::Neuter, Case::Genitive).as_deref(),
+            Some("семян")
+        );
+        assert_eq!(
+            many("стремя", Gender::Neuter, Case::Genitive).as_deref(),
+            Some("стремян")
+        );
+        assert_eq!(
+            many("время", Gender::Neuter, Case::Genitive).as_deref(),
+            Some("времён")
+        );
+    }
+
+    #[test]
+    fn the_way_declines_by_the_third_declension_with_its_own_instrumental() {
+        assert_eq!(
+            one("путь", Gender::Masculine, Case::Nominative).as_deref(),
+            Some("путь")
+        );
+        assert_eq!(
+            one("путь", Gender::Masculine, Case::Genitive).as_deref(),
+            Some("пути")
+        );
+        assert_eq!(
+            one("путь", Gender::Masculine, Case::Instrumental).as_deref(),
+            Some("путём")
+        );
+        assert_eq!(
+            many("путь", Gender::Masculine, Case::Nominative).as_deref(),
+            Some("пути")
+        );
+        assert_eq!(
+            many("путь", Gender::Masculine, Case::Genitive).as_deref(),
+            Some("путей")
+        );
+        assert_eq!(
+            many("путь", Gender::Masculine, Case::Dative).as_deref(),
+            Some("путям")
+        );
     }
 }

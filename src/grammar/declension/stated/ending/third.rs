@@ -12,11 +12,14 @@
 use crate::grammar::{Animacy, Case, Number};
 
 /// The ending one cell of the third paradigm takes.
+///
+/// Every cell has one: the paradigm is whole, and an answer that could not
+/// be given would have nothing to be silent about.
 #[must_use]
-pub const fn of(case: Case, number: Number, animacy: Animacy) -> Option<&'static str> {
+pub const fn of(case: Case, number: Number, animacy: Animacy) -> &'static str {
     match number {
-        Number::Singular => Some(singular(case)),
-        Number::Plural => Some(plural(case, animacy))
+        Number::Singular => singular(case),
+        Number::Plural => plural(case, animacy)
     }
 }
 

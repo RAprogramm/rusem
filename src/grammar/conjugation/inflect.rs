@@ -9,13 +9,21 @@
 //! lands on. `писать` and the third person plural come out as `пишут` and not
 //! `пишют`, because `ю` does not stand after a sibilant.
 //!
-//! A verb of the listed class comes back as [`None`]. So does a cell the verb
-//! does not have: a perfective verb has no present, and asking for one is a
-//! question about a form that is not there.
+//! A verb of the listed class comes back as [`None`] in every cell but the
+//! infinitive: its stems are told, not derived. The present cells state a
+//! shape rather than an aspect — a perfective verb writes its simple future
+//! there, `прочитают` beside `читают`, as
+//! [`crate::grammar::form::verb::VerbForm::Present`] says of the cell — and
+//! which of the two a word means is the word's aspect, stated on the word
+//! rather than read off the infinitive here.
+//!
+//! A reflexive verb is the plain verb inside it with the particle after every
+//! ending, so the plain verb is written out and the particle put back —
+//! `учиться` writes `учился`, not the `учил` its inside writes alone.
 
 use crate::grammar::{
     Number, Person,
-    conjugation::{Conjugation, class, endings, imperative, past, stems},
+    conjugation::{Conjugation, class, endings, imperative, past, reflexive, stems},
     form::{Bare, verb::VerbForm},
     stem::{self, Stem}
 };
@@ -49,8 +57,14 @@ use crate::grammar::{
 /// ```
 #[must_use]
 pub fn written(infinitive: &str, form: VerbForm, stressed: bool) -> Option<String> {
+    if matches!(form, VerbForm::Infinitive) {
+        return Some(String::from(infinitive));
+    }
+    if let Some(plain) = reflexive::bare(infinitive) {
+        return written(&plain, form, stressed).map(|held| reflexive::attached(&held));
+    }
+
     match form {
-        VerbForm::Infinitive => Some(String::from(infinitive)),
         VerbForm::Present {
             person,
             number
@@ -107,8 +121,13 @@ fn present(infinitive: &str, person: Person, number: Number, stressed: bool) -> 
 }
 
 /// One cell of the past.
+///
+/// Built on the stem the class vouches for. A verb whose class does not —
+/// the consonantal and the listed — comes back as [`None`] rather than
+/// spelled on a stem the infinitive never showed: `мочь` refuses instead of
+/// writing `мол` for `мог`.
 fn gone(infinitive: &str, held: Bare) -> Option<String> {
-    let stem = stems::past(infinitive)?;
+    let stem = stems::past(infinitive, class::of(infinitive))?;
     let table = past::table(&stem);
     let ending = table.of(
         held.gender().unwrap_or(crate::grammar::Gender::Masculine),
@@ -286,5 +305,62 @@ mod tests {
     fn a_listed_verb_is_not_written_out() {
         assert_eq!(cell("тереть", Person::First, Number::Singular), None);
         assert_eq!(cell("мыть", Person::Third, Number::Plural), None);
+        assert_eq!(cell("брить", Person::Second, Number::Singular), None);
+        assert_eq!(cell("гнать", Person::First, Number::Singular), None);
+        assert_eq!(cell("сидеть", Person::First, Number::Singular), None);
+        assert_eq!(cell("кричать", Person::First, Number::Singular), None);
+    }
+
+    #[test]
+    fn a_hidden_past_is_refused_rather_than_invented() {
+        let he = VerbForm::Past(Bare::Singular(Gender::Masculine));
+
+        assert_eq!(written("мочь", he, false), None);
+        assert_eq!(written("печь", he, false), None);
+        assert_eq!(written("идти", he, false), None);
+        assert_eq!(written("сесть", he, false), None);
+        assert_eq!(written("тереть", he, false), None);
+        assert_eq!(written("красть", he, false), None);
+    }
+
+    #[test]
+    fn the_verb_the_code_states_by_name_is_written_out() {
+        assert_eq!(
+            cell("спать", Person::First, Number::Singular).as_deref(),
+            Some("сплю")
+        );
+        assert_eq!(
+            cell("спать", Person::Second, Number::Singular).as_deref(),
+            Some("спишь")
+        );
+        assert_eq!(
+            cell("спать", Person::Third, Number::Plural).as_deref(),
+            Some("спят")
+        );
+    }
+
+    #[test]
+    fn a_reflexive_verb_carries_its_particle_in_every_cell() {
+        let he = VerbForm::Past(Bare::Singular(Gender::Masculine));
+        let she = VerbForm::Past(Bare::Singular(Gender::Feminine));
+
+        assert_eq!(written("учиться", he, false).as_deref(), Some("учился"));
+        assert_eq!(written("учиться", she, false).as_deref(), Some("училась"));
+        assert_eq!(
+            written(
+                "учиться",
+                VerbForm::Present {
+                    person: Person::Third,
+                    number: Number::Singular
+                },
+                false
+            )
+            .as_deref(),
+            Some("учится")
+        );
+        assert_eq!(
+            written("учиться", VerbForm::Infinitive, false).as_deref(),
+            Some("учиться")
+        );
     }
 }

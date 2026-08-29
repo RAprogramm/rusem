@@ -18,7 +18,7 @@
 pub mod read;
 pub mod verb;
 
-use super::{Animacy, Case, Gender, GrammarTag, Number, PartOfSpeech};
+use super::{Case, Gender, GrammarTag, Number, PartOfSpeech};
 
 /// Case and number, with gender where the language states one.
 ///
@@ -190,6 +190,12 @@ pub enum Form {
     Pronoun(Agreed),
     /// An adverb, which states nothing.
     Adverb,
+    /// A predicative, which heads a clause with no subject: `надо`, `нельзя`.
+    ///
+    /// It looks like an adverb and states as little, but it is not one: it
+    /// heads the clause and puts its actor in the dative, and a rule scoped
+    /// to one of the two must not fire on the other.
+    Predicative,
     /// A preposition, which states nothing and governs a case.
     Preposition,
     /// A conjunction, which states nothing.
@@ -213,6 +219,7 @@ impl Form {
             Self::Numeral(_) => PartOfSpeech::Numeral,
             Self::Pronoun(_) => PartOfSpeech::Pronoun,
             Self::Adverb => PartOfSpeech::Adverb,
+            Self::Predicative => PartOfSpeech::Predicative,
             Self::Preposition => PartOfSpeech::Preposition,
             Self::Conjunction => PartOfSpeech::Conjunction,
             Self::Particle => PartOfSpeech::Particle,
@@ -321,14 +328,17 @@ impl Form {
     }
 }
 
-/// Reports whether an animacy can stand with a case at all.
+/// Reports whether animacy is visible in a case.
 ///
-/// Animacy is only ever visible in the accusative, where it decides whether
-/// the form is written as the nominative or as the genitive. Elsewhere it is
-/// a fact about the word and says nothing about the form.
+/// Only in the accusative, where it decides whether the form is written as
+/// the nominative or as the genitive — `вижу стол` against `вижу брата`.
+/// Elsewhere the form is its own for animate and inanimate alike, so animacy
+/// is a fact about the word and shows nothing about the form. Which animacy
+/// the word has does not enter into it: both show in the accusative and
+/// neither shows anywhere else, so the case alone decides.
 #[must_use]
-pub const fn animacy_shows(case: Case, animacy: Animacy) -> bool {
-    matches!(case, Case::Accusative) && matches!(animacy, Animacy::Animate | Animacy::Inanimate)
+pub const fn animacy_shows(case: Case) -> bool {
+    matches!(case, Case::Accusative)
 }
 
 #[cfg(test)]
@@ -389,7 +399,18 @@ mod tests {
 
     #[test]
     fn animacy_is_only_visible_in_the_accusative() {
-        assert!(animacy_shows(Case::Accusative, Animacy::Animate));
-        assert!(!animacy_shows(Case::Nominative, Animacy::Animate));
+        assert!(animacy_shows(Case::Accusative));
+        assert!(!animacy_shows(Case::Nominative));
+        assert!(!animacy_shows(Case::Genitive));
+    }
+
+    #[test]
+    fn a_predicative_keeps_its_part_of_speech() {
+        assert_eq!(
+            Form::Predicative.part_of_speech(),
+            PartOfSpeech::Predicative
+        );
+        assert!(Form::Predicative.part_of_speech().is_predicative());
+        assert_eq!(Form::Predicative.case(), None);
     }
 }

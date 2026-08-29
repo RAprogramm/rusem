@@ -104,7 +104,7 @@ fn parted(nominative: &str, gender: Gender, case: Case, number: Number, written:
     if !matches!((case.merged(), number), (Case::Genitive, Number::Plural)) {
         return false;
     }
-    let Some(stem) = noun::stem(nominative, gender, case, number) else {
+    let Some(stem) = noun::stem(nominative, gender, Animacy::Inanimate, case, number) else {
         return false;
     };
     let Some(ending) = noun::ending(nominative, gender, Animacy::Inanimate, case, number) else {

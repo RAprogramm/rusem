@@ -2,16 +2,21 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 72, пункт 2. Мягкий знак перед твёрдой согласной.
+//! § 72. Мягкий знак перед твёрдой согласной.
 //!
 //! Буква ь пишется для обозначения мягкости согласной в середине слова перед
-//! твёрдой согласной: `молотьба`, `просьба`, `нянька`, `меньше`.
+//! твёрдой согласной: `молотьба`, `просьба`, `нянька`, `меньше`. В источнике
+//! это утверждение стоит вне нумерации — пункты 1 и 2 параграф отводит
+//! только согласной перед мягкой, — поэтому ссылка идёт на параграф целиком.
 
 use super::{After, handed_over, stands, with_sign, without_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(72, 2);
+/// Where this rule is written.
+///
+/// The before-a-hard-consonant sentence is unnumbered prose in § 72, so the
+/// citation is the paragraph whole.
+pub const CITES: Citation = Citation::whole(72);
 
 /// What this point is about.
 pub const SCOPE: Scope = scope::ANY;
@@ -62,9 +67,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_point_is_cited() {
+    fn the_paragraph_is_cited_whole() {
         assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 2);
+        assert_eq!(CITES.point, 0);
     }
 
     #[test]

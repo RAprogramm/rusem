@@ -11,8 +11,8 @@
 //! voiceless consonant (§ 47).
 //!
 //! **Hardness.** Most consonants are hard or soft by the letter that follows.
-//! Five are neither: `ж`, `ш`, `ц` are hard whatever follows, `ч`, `щ` soft,
-//! and `й` soft. Those five are why § 1 and § 2 exist at all — the vowel after
+//! Six are neither: `ж`, `ш`, `ц` are hard whatever follows, `ч`, `щ` soft,
+//! and `й` soft. Those six are why § 1 and § 2 exist at all — the vowel after
 //! them states nothing, so the code has to.
 //!
 //! **Place.** The back consonants `г`, `к`, `х` refuse `ы` after them and swap

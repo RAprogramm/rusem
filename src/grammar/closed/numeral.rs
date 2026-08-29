@@ -15,7 +15,9 @@
 //! agrees like an adjective.
 //!
 //! A **collective** counts people and animals and refuses things: `двое
-//! друзей` is right and `двое столов` is not.
+//! друзей` is right and `двое столов` is not. `оба` and `обе` stand with them
+//! in the grammars and are free of the restriction: they count a pair of
+//! anything.
 //!
 //! A **fractional** counts a part: `полтора часа` is one and a half of them.
 //! Only three are written in one word — `полтора`, `полторы`, `полтораста`;
@@ -38,6 +40,7 @@ pub const CARDINAL: &[&str] = &[
     "двадцать",
     "две",
     "двенадцать",
+    "двести",
     "девяносто",
     "девятнадцать",
     "девять",
@@ -81,14 +84,19 @@ pub const COLLECTIVE: &[&str] = &[
     "двое",
     "девятеро",
     "десятеро",
-    "оба",
-    "обе",
     "пятеро",
     "семеро",
     "трое",
     "четверо",
     "шестеро"
 ];
+
+/// `оба` and `обе`, which count a pair of anything.
+///
+/// The grammars file them with the collectives, but the animacy restriction
+/// does not reach them: `оба стола` and `обе книги` are as right as `оба
+/// друга`.
+pub const BOTH: &[&str] = &["оба", "обе"];
 
 /// The fractionals written in one word.
 pub const FRACTIONAL: &[&str] = &["полтора", "полтораста", "полторы"];
@@ -114,6 +122,7 @@ pub const ORDINAL: &[&str] = &[
     "миллиардный",
     "миллионный",
     "нулевой",
+    "одиннадцатый",
     "первый",
     "пятидесятый",
     "пятисотый",
@@ -146,7 +155,7 @@ pub const ORDINAL: &[&str] = &[
 pub enum Kind {
     /// Counts and governs: `три`, `пять`.
     Cardinal,
-    /// Counts the animate: `двое`, `трое`.
+    /// Counts as a set: `двое`, `трое`, and the pair-counting `оба`.
     Collective,
     /// Counts a part: `полтора`.
     Fractional,
@@ -186,7 +195,7 @@ pub fn kind(written: &str) -> Option<Kind> {
     if CARDINAL.contains(&held.as_str()) {
         return Some(Kind::Cardinal);
     }
-    if COLLECTIVE.contains(&held.as_str()) {
+    if COLLECTIVE.contains(&held.as_str()) || BOTH.contains(&held.as_str()) {
         return Some(Kind::Collective);
     }
     if FRACTIONAL.contains(&held.as_str()) {
@@ -258,10 +267,12 @@ pub fn counts(written: &str) -> Option<Counts> {
 /// Reports whether a numeral counts only what is animate.
 ///
 /// `двое друзей` is right and `двое столов` is not, so a gate on a counted
-/// phrase asks this before it asks anything else.
+/// phrase asks this before it asks anything else. `оба` and `обе` answer
+/// false: they are collectives without the restriction, and `оба стола` is
+/// right.
 #[must_use]
 pub fn counts_the_animate(written: &str) -> bool {
-    matches!(kind(written), Some(Kind::Collective))
+    COLLECTIVE.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -270,7 +281,7 @@ mod tests {
 
     #[test]
     fn every_class_is_sorted_and_holds_no_word_twice() {
-        for class in [CARDINAL, COLLECTIVE, FRACTIONAL, ORDINAL] {
+        for class in [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL] {
             let mut held = class.to_vec();
             held.sort_unstable();
             held.dedup();
@@ -281,12 +292,12 @@ mod tests {
 
     #[test]
     fn every_numeral_is_of_exactly_one_kind() {
-        for class in [CARDINAL, COLLECTIVE, FRACTIONAL, ORDINAL] {
+        for class in [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL] {
             for held in class {
                 assert!(is_numeral(held), "{held} is no numeral");
             }
         }
-        let mut every: Vec<&str> = [CARDINAL, COLLECTIVE, FRACTIONAL, ORDINAL].concat();
+        let mut every: Vec<&str> = [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL].concat();
         let counted = every.len();
         every.sort_unstable();
         every.dedup();
@@ -298,9 +309,20 @@ mod tests {
     fn a_numeral_names_its_kind() {
         assert_eq!(kind("три"), Some(Kind::Cardinal));
         assert_eq!(kind("трое"), Some(Kind::Collective));
+        assert_eq!(kind("оба"), Some(Kind::Collective));
         assert_eq!(kind("третий"), Some(Kind::Ordinal));
         assert_eq!(kind("полтора"), Some(Kind::Fractional));
         assert_eq!(kind("Пять"), Some(Kind::Cardinal));
+    }
+
+    #[test]
+    fn every_hundred_and_every_teen_is_listed() {
+        assert_eq!(kind("двести"), Some(Kind::Cardinal));
+        assert_eq!(kind("одиннадцатый"), Some(Kind::Ordinal));
+
+        let counted = counts("двести").expect("two hundred governs");
+        assert_eq!(counted.case, Case::Genitive);
+        assert_eq!(counted.number, Number::Plural);
     }
 
     #[test]
@@ -351,8 +373,14 @@ mod tests {
     #[test]
     fn a_collective_counts_only_the_animate() {
         assert!(counts_the_animate("двое"));
-        assert!(counts_the_animate("оба"));
         assert!(!counts_the_animate("два"));
         assert!(!counts_the_animate("первый"));
+    }
+
+    #[test]
+    fn the_pair_counters_are_free_of_the_animacy_restriction() {
+        assert!(!counts_the_animate("оба"));
+        assert!(!counts_the_animate("обе"));
+        assert_eq!(kind("обе"), Some(Kind::Collective));
     }
 }

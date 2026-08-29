@@ -50,7 +50,14 @@ pub struct Declining {
     ///
     /// § 4 writes `е` for an unstressed `о` or `ё` after a sibilant, so `наш`
     /// says `нашем` and `что` says `чём`. Nothing but the stress parts them.
-    pub stressed:   bool
+    pub stressed:   bool,
+    /// Whether the pronoun agrees, taking every gender and both numbers.
+    ///
+    /// `тот` and `мой` lean on a noun and write a form for whatever cell the
+    /// noun states. `кто` and `что` stand in a noun's place instead: each has
+    /// one paradigm, held in the masculine singular, and no other cell to
+    /// write — [`written`] refuses the cells the language does not have.
+    pub agrees:     bool
 }
 
 /// The pronouns that decline this way.
@@ -61,119 +68,136 @@ pub struct Declining {
 ///
 /// `кто` and `что` state a gender they do not have: they are masculine to
 /// every verb that agrees with them — `кто пришёл` — and have no plural at
-/// all, which [`cells`] answers for by never finding one.
+/// all. [`written`] refuses the cells the language does not have, so
+/// [`cells`] never finds one.
 const DECLINING: &[Declining] = &[
     Declining {
         dictionary: "тот",
         stem:       "т",
         pattern:    Pattern::Older,
         shape:      Stem::Hard,
-        stressed:   false
+        stressed:   false,
+        agrees:     true
     },
     Declining {
         dictionary: "этот",
         stem:       "эт",
         pattern:    Pattern::Newer,
         shape:      Stem::Hard,
-        stressed:   false
+        stressed:   false,
+        agrees:     true
     },
     Declining {
         dictionary: "весь",
         stem:       "вс",
         pattern:    Pattern::Older,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "сей",
         stem:       "с",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "мой",
         stem:       "мо",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "твой",
         stem:       "тво",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "свой",
         stem:       "сво",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "чей",
         stem:       "чь",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "наш",
         stem:       "наш",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   false
+        stressed:   false,
+        agrees:     true
     },
     Declining {
         dictionary: "ваш",
         stem:       "ваш",
         pattern:    Pattern::Newer,
         shape:      Stem::Soft,
-        stressed:   false
+        stressed:   false,
+        agrees:     true
     },
     Declining {
         dictionary: "один",
         stem:       "одн",
         pattern:    Pattern::Newer,
         shape:      Stem::Hard,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "одна",
         stem:       "одн",
         pattern:    Pattern::Newer,
         shape:      Stem::Hard,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "одно",
         stem:       "одн",
         pattern:    Pattern::Newer,
         shape:      Stem::Hard,
-        stressed:   true
+        stressed:   true,
+        agrees:     true
     },
     Declining {
         dictionary: "сам",
         stem:       "сам",
         pattern:    Pattern::Newer,
         shape:      Stem::Hard,
-        stressed:   false
+        stressed:   false,
+        agrees:     true
     },
     Declining {
         dictionary: "кто",
         stem:       "к",
         pattern:    Pattern::Older,
         shape:      Stem::Hard,
-        stressed:   true
+        stressed:   true,
+        agrees:     false
     },
     Declining {
         dictionary: "что",
         stem:       "ч",
         pattern:    Pattern::Older,
         shape:      Stem::Soft,
-        stressed:   true
+        stressed:   true,
+        agrees:     false
     }
 ];
 
@@ -235,13 +259,32 @@ pub fn written(
     animacy: Animacy
 ) -> Option<String> {
     let held = declining(dictionary)?;
-    if case == Case::Nominative && number == Number::Singular && gender == Gender::Masculine {
+    if !held.agrees && (number == Number::Plural || gender != Gender::Masculine) {
+        return None;
+    }
+    if number == Number::Singular && gender == Gender::Masculine && names_itself(case, animacy) {
         return Some(String::from(held.dictionary));
     }
 
     let ending = endings::of(held.pattern, held.shape, gender, number, case, animacy);
 
     Some(String::from(held.stem) + &spelling::fitted(held.stem, ending, held.stressed))
+}
+
+/// Reports whether a masculine singular cell is written as the dictionary
+/// form itself.
+///
+/// The nominative is the one cell no paradigm writes, so it is kept beside
+/// the stem as the dictionary form; the vocative reads the nominative's row,
+/// and the accusative of a thing repeats the nominative letter for letter —
+/// `вижу тот дом` — so all three are answered with the same word rather than
+/// with a bare stem the paradigm has no ending for.
+const fn names_itself(case: Case, animacy: Animacy) -> bool {
+    match case.merged() {
+        Case::Nominative | Case::Vocative => true,
+        Case::Accusative => matches!(animacy, Animacy::Inanimate),
+        _ => false
+    }
 }
 
 /// Reads a written pronoun back into every cell that could have written it.
@@ -471,9 +514,11 @@ mod tests {
             for number in [Number::Singular, Number::Plural] {
                 for gender in Gender::STATED {
                     for case in Case::STATED {
-                        let word =
+                        let Some(word) =
                             written(held.dictionary, gender, number, case, Animacy::Inanimate)
-                                .expect("a pronoun that declines writes every cell");
+                        else {
+                            continue;
+                        };
                         let found = cells(&word, held.dictionary, Animacy::Inanimate);
 
                         assert!(!found.is_empty(), "{word} is written and not read back");
@@ -505,7 +550,60 @@ mod tests {
                 Animacy::Inanimate
             )
             .as_deref(),
-            Some("т")
+            Some("тот")
+        );
+    }
+
+    #[test]
+    fn a_thing_pointed_at_repeats_the_dictionary_form() {
+        for (dictionary, form) in [("этот", "этот"), ("весь", "весь"), ("мой", "мой")]
+        {
+            assert_eq!(
+                written(
+                    dictionary,
+                    Gender::Masculine,
+                    Number::Singular,
+                    Case::Accusative,
+                    Animacy::Inanimate
+                )
+                .as_deref(),
+                Some(form),
+                "{dictionary}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_interrogatives_refuse_the_cells_the_language_does_not_have() {
+        for dictionary in ["кто", "что"] {
+            assert_eq!(
+                written(
+                    dictionary,
+                    Gender::Masculine,
+                    Number::Plural,
+                    Case::Nominative,
+                    Animacy::Inanimate
+                ),
+                None,
+                "{dictionary}"
+            );
+            assert_eq!(
+                written(
+                    dictionary,
+                    Gender::Feminine,
+                    Number::Singular,
+                    Case::Nominative,
+                    Animacy::Inanimate
+                ),
+                None,
+                "{dictionary}"
+            );
+        }
+        assert!(cells("ке", "кто", Animacy::Inanimate).is_empty());
+        let read = cells("кем", "кто", Animacy::Inanimate);
+        assert!(
+            read.iter()
+                .all(|cell| cell.number == Number::Singular && cell.case == Case::Instrumental)
         );
     }
 

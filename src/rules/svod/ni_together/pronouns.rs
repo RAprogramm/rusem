@@ -2,16 +2,18 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 90, пункт 1. Частица `ни` с вопросительным словом
-//! пишется слитно.
+//! § 90, пункт 1. Частица `ни` с местоимением пишется слитно.
 //!
-//! `никто`, `ничто`, `никакой`, `ничей`, `никогда`, `нигде`, `никуда`, `никак`.
+//! `никто`, `ничто`, `никакой`, `ничей`. Наречия — `никогда`, `нигде` — пункт
+//! не называет: они перечислены в пункте 2 и записаны в [`super::adverbs`].
 //!
 //! Предлог между частицей и словом разводит их обратно: `ни у кого` пишется в
 //! три слова, и это уже не тот случай, о котором говорит пункт.
 //!
-//! Что считается вопросительным словом, решает [`asking::asks`]: слияние и
-//! построение — один и тот же факт, увиденный с двух сторон.
+//! Что считается вопросительным местоимением, решает [`asking::PRONOUNS`]:
+//! слияние и построение — один и тот же факт, увиденный с двух сторон.
+//! `нисколько` пункт 2 называет наречием, и хотя `сколько` стоит среди
+//! местоимений, слово уходит туда, куда его записал источник.
 
 use super::PARTICLE;
 use crate::{
@@ -26,7 +28,7 @@ pub const CITES: Citation = Citation::point(90, 1);
 pub const SCOPE: Scope = scope::ANY;
 
 /// What the point says when it is broken.
-const SAYS: &str = "частица ни пишется с вопросительным словом слитно";
+const SAYS: &str = "частица ни пишется с местоимением слитно";
 
 /// What the point finds in a run of characters.
 ///
@@ -51,16 +53,16 @@ pub fn found(written: &str) -> Findings {
     let (Some(particle), Some(rest), None) = (said.next(), said.next(), said.next()) else {
         return held;
     };
-    if particle != PARTICLE || !asking::asks(rest) {
+    if particle != PARTICLE || !asking::PRONOUNS.contains(&rest) {
         return held;
     }
 
-    held.push(Found::new(
-        CITES,
-        particle.chars().count(),
-        SAYS,
-        std::format!("{particle}{rest}")
-    ));
+    let joined = std::format!("{particle}{rest}");
+    if super::adverbs::names(&joined) {
+        return held;
+    }
+
+    held.push(Found::new(CITES, particle.chars().count(), SAYS, joined));
     held
 }
 
@@ -95,6 +97,17 @@ mod tests {
     #[test]
     fn the_other_particle_is_the_other_paragraph() {
         assert!(found("не кто").is_empty());
+    }
+
+    #[test]
+    fn an_adverb_is_the_other_point() {
+        assert!(found("ни когда").is_empty());
+        assert!(found("ни где").is_empty());
+    }
+
+    #[test]
+    fn the_word_the_source_calls_an_adverb_is_left_to_the_other_point() {
+        assert!(found("ни сколько").is_empty());
     }
 
     #[test]

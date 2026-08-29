@@ -73,7 +73,7 @@ pub const fn soft(kind: Kind) -> bool {
 ///         parted:   false
 ///     }
 /// );
-/// assert_eq!(one, Some("ём"));
+/// assert_eq!(one, "ём");
 /// ```
 #[must_use]
 pub const fn of(
@@ -83,27 +83,20 @@ pub const fn of(
     number: Number,
     animacy: Animacy,
     shape: Shape
-) -> Option<&'static str> {
+) -> &'static str {
     if matches!(index.kind, Kind::Third) {
         return third::of(case, number, animacy);
     }
     if shape.opens {
-        return Some(first::of(
+        return first::of(
             index.kind,
             case,
             number,
             animacy,
             shape.stressed,
             shape.parted
-        ));
+        );
     }
 
-    Some(second::of(
-        gender,
-        index.kind,
-        case,
-        number,
-        animacy,
-        shape.stressed
-    ))
+    second::of(gender, index.kind, case, number, animacy, shape.stressed)
 }

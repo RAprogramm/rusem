@@ -6,9 +6,17 @@
 //!
 //! A verb states person and number in the present and the future, gender and
 //! number in the past, and person in the imperative. Which endings it takes is
-//! settled by its conjugation, and the conjugation is settled by the
-//! infinitive — by its last letters for the general case, and by a closed list
-//! of verbs for everything the general case gets wrong.
+//! settled by its conjugation, and § 44 of the 1956 code settles the
+//! conjugation from the infinitive — by its last letters for the general case,
+//! and by the closed lists it names against them.
+//!
+//! § 44 reads only verbs with unstressed personal endings; that is the whole
+//! reach of the rule. A verb that stresses its endings shows its conjugation
+//! in them — `несёшь` beside `кричишь` — and its infinitive does not tell it:
+//! `спать` conjugates `спишь` where `читать` conjugates `читаешь`. Such a verb
+//! is settled here only where the code itself states it, as its additional
+//! rule states `спать, спишь`; the rest are the dictionary's to state, and the
+//! classes in [`class`] refuse to build forms for the ones they are told of.
 //!
 //! The paradigm runs both ways. [`endings`] builds a form from a cell;
 //! [`reading`] takes a written form and names the cells it could have come
@@ -43,10 +51,14 @@ pub enum Conjugation {
 const FIRST_IN_IT: &[&str] = &["брить", "стелить", "зиждиться", "почить"];
 
 /// The verbs in `-еть` that take the second conjugation.
+///
+/// The six § 44 names, no more: `вертеть`, `видеть`, `зависеть`, `обидеть`,
+/// `смотреть`, `терпеть`. `ненавидеть` needs no entry, because it is `видеть`
+/// under prefixes and the paragraph's additional rule already reads a prefixed
+/// verb by the verb inside it.
 const SECOND_IN_ET: &[&str] = &[
     "смотреть",
     "видеть",
-    "ненавидеть",
     "обидеть",
     "терпеть",
     "вертеть",
@@ -54,7 +66,12 @@ const SECOND_IN_ET: &[&str] = &[
 ];
 
 /// The verbs in `-ать` that take the second conjugation.
-const SECOND_IN_AT: &[&str] = &["гнать", "держать", "дышать", "слышать"];
+///
+/// The first four are § 44's own list. `спать` stands beside them because the
+/// paragraph's additional rule states it in as many words — `выспаться,
+/// выспишься (ср. спать, спишь) — II спряжения` — reaching past the unstressed
+/// endings the numbered points confine themselves to.
+const SECOND_IN_AT: &[&str] = &["гнать", "держать", "дышать", "слышать", "спать"];
 
 /// The verbs that draw endings from both sets.
 const MIXED: &[&str] = &["хотеть", "бежать", "чтить"];
@@ -62,12 +79,20 @@ const MIXED: &[&str] = &["хотеть", "бежать", "чтить"];
 /// The verbs that stand outside both sets.
 const IRREGULAR: &[&str] = &["есть", "дать"];
 
-/// Names the conjugation a verb belongs to, given its infinitive.
+/// Names the conjugation § 44 reads off this infinitive.
 ///
 /// The tests are ordered as the language orders them: the closed lists first,
 /// because they exist precisely to overrule the ending, and the ending after.
 /// A prefix does not change a conjugation — `посмотреть` conjugates as
 /// `смотреть` — so every list is matched against the tail of the infinitive.
+///
+/// The answer carries § 44's own scope. For a verb with unstressed personal
+/// endings, or one the code states by name, this is the verb's conjugation.
+/// For a verb that stresses its endings the infinitive does not carry the
+/// fact, and what comes back is the paragraph's general case — the reading
+/// the shape would get, not a statement about the verb; [`class::of`] holds
+/// the verbs known to be misread so, and answers [`class::Class::Listed`] for
+/// them so that no form is built on the misreading.
 ///
 /// # Examples
 ///
@@ -122,28 +147,50 @@ const PREFIXES: &[&str] = &[
 /// tail is required to be prefixes and nothing else, stripped one at a time
 /// because Russian stacks them — `понавыдумывать` carries three.
 pub(crate) fn listed(infinitive: &str, table: &[&str]) -> bool {
-    table
-        .iter()
-        .any(|held| infinitive.strip_suffix(held).is_some_and(all_prefixes))
+    table.iter().any(|held| {
+        infinitive
+            .strip_suffix(held)
+            .is_some_and(|head| all_prefixes(head, opens_iotated(held)))
+    })
+}
+
+/// Reports whether a verb opens with a letter § 70 guards with the hard sign.
+fn opens_iotated(verb: &str) -> bool {
+    verb.chars()
+        .next()
+        .is_some_and(|first| matches!(first, 'е' | 'ё' | 'ю' | 'я'))
 }
 
 /// Reports whether what stands before a verb is prefixes and nothing else.
 ///
-/// A prefix that meets `е`, `ю` or `я` is written with a hard sign after it —
-/// `съесть`, `объехать`, § 70 — and the sign belongs to the prefix rather than
-/// to the verb, so it is stripped along with it.
-fn all_prefixes(mut head: &str) -> bool {
-    head = head.strip_suffix('ъ').unwrap_or(head);
+/// A prefix ending in a consonant that meets `е`, `ё`, `ю` or `я` is written
+/// with a hard sign after it — `съесть`, `объехать`, § 70 — and the sign
+/// belongs to the prefix rather than to the verb, so it is stripped along with
+/// it. The sign is not optional there, so its absence proves the consonant
+/// belongs to the root: `сесть` is not `с` and `есть`, because that word is
+/// written `съесть`.
+///
+/// The scan terminates because no prefix is empty — the test beside the list
+/// holds that — so every strip shortens what is left.
+fn all_prefixes(head: &str, iotated: bool) -> bool {
+    let mut left = match head.strip_suffix('ъ') {
+        Some(bare) => bare,
+        None if iotated
+            && head
+                .chars()
+                .last()
+                .is_some_and(|last| !crate::alphabet::is_vowel(last)) =>
+        {
+            return false;
+        }
+        None => head
+    };
 
-    while !head.is_empty() {
-        let Some(shorter) = PREFIXES
-            .iter()
-            .find_map(|held| head.strip_prefix(held))
-            .filter(|shorter| shorter.len() < head.len())
-        else {
+    while !left.is_empty() {
+        let Some(shorter) = PREFIXES.iter().find_map(|held| left.strip_prefix(held)) else {
             return false;
         };
-        head = shorter;
+        left = shorter;
     }
 
     true
@@ -182,8 +229,27 @@ mod tests {
     }
 
     #[test]
+    fn the_code_states_the_stressed_verb_it_names() {
+        assert_eq!(of("спать"), Conjugation::Second);
+        assert_eq!(of("поспать"), Conjugation::Second);
+    }
+
+    #[test]
+    fn a_prefixed_hater_is_read_by_the_verb_inside_it() {
+        assert_eq!(of("ненавидеть"), Conjugation::Second);
+    }
+
+    #[test]
+    fn a_missing_hard_sign_refuses_the_prefix_reading() {
+        assert_eq!(of("сесть"), Conjugation::First);
+        assert_eq!(of("поесть"), Conjugation::Irregular);
+        assert_eq!(of("надоесть"), Conjugation::Irregular);
+    }
+
+    #[test]
     fn no_prefix_stands_after_one_that_opens_it() {
         for (at, held) in PREFIXES.iter().enumerate() {
+            assert!(!held.is_empty(), "an empty prefix would strip nothing");
             for earlier in &PREFIXES[..at] {
                 assert!(
                     !held.starts_with(earlier),

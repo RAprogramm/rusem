@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 72, пункт 3. Мягкий знак перед мягкой согласной, которая твердеет.
+//! § 72, пункт 1. Мягкий знак перед мягкой согласной, которая твердеет.
 //!
 //! Для обозначения мягкости согласной, стоящей перед другой мягкой согласной,
 //! ь пишется, если при изменении слова вторая мягкая согласная становится
@@ -17,7 +17,10 @@ use super::{After, handed_over, stands, with_sign, without_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
 /// Where this point is written.
-pub const CITES: Citation = Citation::point(72, 3);
+///
+/// The first of the two numbered points of § 72 — both belong to the
+/// soft-before-soft case.
+pub const CITES: Citation = Citation::point(72, 1);
 
 /// What this point is about.
 pub const SCOPE: Scope = scope::ANY;
@@ -71,7 +74,7 @@ mod tests {
     #[test]
     fn the_point_is_cited() {
         assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 3);
+        assert_eq!(CITES.point, 1);
     }
 
     #[test]

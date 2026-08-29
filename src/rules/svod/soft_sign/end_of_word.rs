@@ -2,19 +2,25 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! § 72, пункт 1. Мягкий знак в конце слова.
+//! § 72. Мягкий знак в конце слова.
 //!
 //! Буква ь пишется для обозначения мягкости согласной, кроме ч и щ, в конце
 //! слова: `пить`, `темь`, `конь`.
 //!
-//! Это самый простой из пунктов параграфа: за согласной ничего не стоит, и
-//! обозначить её мягкость больше нечем.
+//! Это самое простое из утверждений параграфа: за согласной ничего не стоит,
+//! и обозначить её мягкость больше нечем. В источнике оно стоит вне
+//! нумерации — пункты 1 и 2 параграф отводит только согласной перед мягкой,
+//! — поэтому ссылка идёт на параграф целиком.
 
 use super::{After, handed_over, stands, with_sign, without_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(72, 1);
+/// Where this rule is written.
+///
+/// The end-of-word sentence is unnumbered prose in § 72 — the paragraph
+/// numbers only its two soft-before-soft cases — so the citation is the
+/// paragraph whole.
+pub const CITES: Citation = Citation::whole(72);
 
 /// What this point is about.
 pub const SCOPE: Scope = scope::ANY;
@@ -65,9 +71,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_point_is_cited() {
+    fn the_paragraph_is_cited_whole() {
         assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 1);
+        assert_eq!(CITES.point, 0);
     }
 
     #[test]

@@ -25,6 +25,7 @@ pub mod origin;
 pub const PREPOSITIONS: &[&str] = &[
     "без",
     "безо",
+    "благодаря",
     "близ",
     "в",
     "вблизи",
@@ -35,7 +36,9 @@ pub const PREPOSITIONS: &[&str] = &[
     "во",
     "возле",
     "вокруг",
+    "вопреки",
     "впереди",
+    "вследствие",
     "для",
     "до",
     "за",
@@ -49,8 +52,10 @@ pub const PREPOSITIONS: &[&str] = &[
     "между",
     "мимо",
     "на",
+    "навстречу",
     "над",
     "надо",
+    "наперекор",
     "напротив",
     "о",
     "об",
@@ -76,6 +81,7 @@ pub const PREPOSITIONS: &[&str] = &[
     "сзади",
     "сквозь",
     "со",
+    "согласно",
     "среди",
     "у",
     "через"
@@ -90,6 +96,7 @@ pub const PREPOSITIONS: &[&str] = &[
 const GOVERNMENT: &[(&str, &[Case])] = &[
     ("без", &[Case::Genitive]),
     ("безо", &[Case::Genitive]),
+    ("благодаря", &[Case::Dative]),
     ("близ", &[Case::Genitive]),
     ("в", &[Case::Accusative, Case::Prepositional]),
     ("вблизи", &[Case::Genitive]),
@@ -100,7 +107,9 @@ const GOVERNMENT: &[(&str, &[Case])] = &[
     ("во", &[Case::Accusative, Case::Prepositional]),
     ("возле", &[Case::Genitive]),
     ("вокруг", &[Case::Genitive]),
+    ("вопреки", &[Case::Dative]),
     ("впереди", &[Case::Genitive]),
+    ("вследствие", &[Case::Genitive]),
     ("для", &[Case::Genitive]),
     ("до", &[Case::Genitive]),
     ("за", &[Case::Accusative, Case::Instrumental]),
@@ -114,8 +123,10 @@ const GOVERNMENT: &[(&str, &[Case])] = &[
     ("между", &[Case::Instrumental, Case::Genitive]),
     ("мимо", &[Case::Genitive]),
     ("на", &[Case::Accusative, Case::Prepositional]),
+    ("навстречу", &[Case::Dative]),
     ("над", &[Case::Instrumental]),
     ("надо", &[Case::Instrumental]),
+    ("наперекор", &[Case::Dative]),
     ("напротив", &[Case::Genitive]),
     ("о", &[Case::Accusative, Case::Prepositional]),
     ("об", &[Case::Accusative, Case::Prepositional]),
@@ -144,6 +155,7 @@ const GOVERNMENT: &[(&str, &[Case])] = &[
         "со",
         &[Case::Genitive, Case::Accusative, Case::Instrumental]
     ),
+    ("согласно", &[Case::Dative]),
     ("среди", &[Case::Genitive]),
     ("у", &[Case::Genitive]),
     ("через", &[Case::Accusative])
@@ -154,6 +166,8 @@ const GOVERNMENT: &[(&str, &[Case])] = &[
 /// `в течение дня`, `несмотря на дождь`. They govern the same way the simple
 /// ones do, but a tokenizer sees two or three words where the grammar sees
 /// one, so they are matched against a run of words rather than against a word.
+/// A derived preposition written as one word — `вследствие`, `согласно` — is
+/// one word to a tokenizer too, and stands in [`PREPOSITIONS`] with the rest.
 pub const COMPOUND: &[(&str, Case)] = &[
     ("в отличие от", Case::Genitive),
     ("в продолжение", Case::Genitive),
@@ -162,25 +176,21 @@ pub const COMPOUND: &[(&str, Case)] = &[
     ("в течение", Case::Genitive),
     ("в ходе", Case::Genitive),
     ("во время", Case::Genitive),
-    ("вследствие", Case::Genitive),
     ("за счёт", Case::Genitive),
     ("на протяжении", Case::Genitive),
     ("наряду с", Case::Instrumental),
     ("несмотря на", Case::Accusative),
     ("по мере", Case::Genitive),
     ("по поводу", Case::Genitive),
-    ("по причине", Case::Genitive),
-    ("согласно", Case::Dative),
-    ("благодаря", Case::Dative),
-    ("вопреки", Case::Dative),
-    ("навстречу", Case::Dative),
-    ("наперекор", Case::Dative)
+    ("по причине", Case::Genitive)
 ];
 
 /// The case a compound preposition takes, when the words open with one.
 ///
 /// The longest match wins: `в связи с` is one preposition and not `в` followed
-/// by two words.
+/// by two words. The match ends at a word boundary: a run whose first words
+/// merely begin with the letters of a compound — `в силуэте` against `в силу`
+/// — opens with no preposition at all.
 ///
 /// # Examples
 ///
@@ -191,10 +201,7 @@ pub const COMPOUND: &[(&str, Case)] = &[
 ///     compound("в течение дня"),
 ///     Some(("в течение", Case::Genitive))
 /// );
-/// assert_eq!(
-///     compound("согласно приказу"),
-///     Some(("согласно", Case::Dative))
-/// );
+/// assert_eq!(compound("в силуэте виден"), None);
 /// assert_eq!(compound("стол стоит"), None);
 /// ```
 #[must_use]
@@ -203,7 +210,10 @@ pub fn compound(written: &str) -> Option<(&'static str, Case)> {
 
     COMPOUND
         .iter()
-        .filter(|(preposition, _)| held.starts_with(preposition))
+        .filter(|(preposition, _)| {
+            held.strip_prefix(preposition)
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with(char::is_whitespace))
+        })
         .max_by_key(|(preposition, _)| preposition.chars().count())
         .map(|(preposition, case)| (*preposition, *case))
 }
@@ -294,13 +304,31 @@ mod tests {
             Some(("в течение", Case::Genitive))
         );
         assert_eq!(
-            compound("несмотря на дождь"),
+            compound("Несмотря на дождь"),
             Some(("несмотря на", Case::Accusative))
         );
-        assert_eq!(
-            compound("Согласно приказу"),
-            Some(("согласно", Case::Dative))
-        );
+    }
+
+    #[test]
+    fn a_run_merely_opening_with_the_letters_of_a_compound_is_refused() {
+        assert_eq!(compound("в силуэте виден"), None);
+        assert_eq!(compound("во времянке тепло"), None);
+        assert_eq!(compound("в течением ошибка"), None);
+    }
+
+    #[test]
+    fn a_derived_preposition_written_as_one_word_is_a_preposition() {
+        for (held, case) in [
+            ("благодаря", Case::Dative),
+            ("вопреки", Case::Dative),
+            ("вследствие", Case::Genitive),
+            ("навстречу", Case::Dative),
+            ("наперекор", Case::Dative),
+            ("согласно", Case::Dative)
+        ] {
+            assert!(is_preposition(held), "{held}");
+            assert_eq!(governs(held), [case], "{held}");
+        }
     }
 
     #[test]
