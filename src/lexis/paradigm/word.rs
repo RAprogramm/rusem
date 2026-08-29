@@ -123,7 +123,8 @@ mod tests {
             aspect:       Aspect::Imperfective,
             transitivity: Transitivity::Transitive,
             reflexive:    false,
-            conjugation:  Conjugation::First
+            conjugation:  Conjugation::First,
+            index:        None
         })
     }
 

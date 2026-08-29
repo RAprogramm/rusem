@@ -21,14 +21,22 @@
 //! `-сь`. So the table is built on the verb without the particle and the
 //! particle is put back on each cell, which is also what spares the class and
 //! the stems from having to know about it.
+//!
+//! Which road the finite cells go by — the index a dictionary states or the
+//! class § 44 derives from the infinitive — is the word's own fact,
+//! [`Verb::road`], stated once for this writer and for the reader alike. An
+//! indexed verb conjugates by what the dictionary said, so a cell the stated
+//! path refuses stays unstated rather than falling back to the guess: the
+//! refusal is the honest answer. The participles stay on the derived path
+//! either way, because the stated generator does not state them yet.
 
 use crate::{
     grammar::{
         Gender, Number, Person,
-        conjugation::{class, imperative, inflect, reflexive, stems},
+        conjugation::{class, imperative, index::VerbIndex, inflect, reflexive, stated, stems},
         form::{Bare, Form, verb::VerbForm}
     },
-    lexis::{Paradigm, Verb},
+    lexis::{Paradigm, Road, Verb},
     morphology::WordForm
 };
 
@@ -63,7 +71,8 @@ const PERSONS: [Person; 3] = [Person::First, Person::Second, Person::Third];
 ///         aspect:       Aspect::Imperfective,
 ///         transitivity: Transitivity::Transitive,
 ///         reflexive:    false,
-///         conjugation:  Conjugation::First
+///         conjugation:  Conjugation::First,
+///         index:        None
 ///     }
 /// );
 /// let cell = Form::Verb(VerbForm::Present {
@@ -93,8 +102,8 @@ pub fn of(lemma: &WordForm, held: Verb) -> Paradigm {
 
     let mut cells = Vec::new();
 
-    for form in shapes(&plain) {
-        if let Some(written) = spelling(&plain, held.reflexive, form) {
+    for form in shapes(&plain, held.road()) {
+        if let Some(written) = spelling(&plain, held, form) {
             cells.push((Form::Verb(form), super::spelled(&written)));
         }
     }
@@ -109,11 +118,14 @@ pub fn of(lemma: &WordForm, held: Verb) -> Paradigm {
 
 /// The cells the verb has, before anything is written in them.
 ///
-/// The imperative is stated only when the stem settles its ending. `читай` and
-/// `помни` follow from the stem; `неси` and `брось` follow from the stress,
-/// which a table built without one does not have — so that cell is left
-/// unstated rather than written the commoner way and hoped over.
-fn shapes(plain: &str) -> Vec<VerbForm> {
+/// On the derived road the imperative is stated only when the stem settles
+/// its ending. `читай` and `помни` follow from the stem; `неси` and `брось`
+/// follow from the stress, which a table built without one does not have — so
+/// that cell is left unstated rather than written the commoner way and hoped
+/// over. A stated index carries the stress in its scheme letter, so an
+/// indexed verb always asks for the cell and the stated builder refuses it
+/// only where the index alone does not state it.
+fn shapes(plain: &str, road: Road<VerbIndex>) -> Vec<VerbForm> {
     let mut forms = std::vec![VerbForm::Infinitive];
 
     for number in [Number::Singular, Number::Plural] {
@@ -130,7 +142,7 @@ fn shapes(plain: &str) -> Vec<VerbForm> {
     }
     forms.push(VerbForm::Past(Bare::Plural));
 
-    if bidding(plain) {
+    if matches!(road, Road::Stated(_)) || bidding(plain) {
         forms.push(VerbForm::Imperative(Number::Singular));
         forms.push(VerbForm::Imperative(Number::Plural));
     }
@@ -143,15 +155,21 @@ fn bidding(plain: &str) -> bool {
     stems::present(plain, class::of(plain)).is_some_and(|stem| imperative::settled(&stem))
 }
 
-/// What is written in one cell.
+/// What is written in one cell, by the road the word states.
 ///
-/// The stress of the ending is not known here, and the unstressed spelling is
-/// the one taken: a paradigm built without a stress mark states what it can
-/// and does not invent the rest.
-fn spelling(plain: &str, reflexive: bool, form: VerbForm) -> Option<String> {
-    let written = inflect::written(plain, form, false)?;
+/// On the stated road the index carries the stress and the departures, and
+/// the cell is written from it exactly; what the index alone does not state
+/// comes back [`None`] and the cell stays unstated, never handed to the
+/// guess. On the derived road the stress of the ending is not known, and the
+/// unstressed spelling is the one taken: a paradigm built without a stress
+/// mark states what it can and does not invent the rest.
+fn spelling(plain: &str, held: Verb, form: VerbForm) -> Option<String> {
+    let written = match held.road() {
+        Road::Stated(index) => stated::written(plain, index, form, false),
+        Road::Derived => inflect::written(plain, form, false)
+    }?;
 
-    Some(if reflexive {
+    Some(if held.reflexive {
         reflexive::attached(&written)
     } else {
         written
@@ -172,7 +190,18 @@ mod tests {
             aspect,
             transitivity: Transitivity::Transitive,
             reflexive,
-            conjugation: Conjugation::First
+            conjugation: Conjugation::First,
+            index: None
+        }
+    }
+
+    fn listed(aspect: Aspect, reflexive: bool, stated: &str) -> Verb {
+        Verb {
+            index: Some(
+                crate::grammar::conjugation::index::read(stated)
+                    .unwrap_or_else(|| unreachable!("a stated index"))
+            ),
+            ..word(aspect, reflexive)
         }
     }
 
@@ -291,6 +320,73 @@ mod tests {
         let table = of(&form("читать"), word(Aspect::Imperfective, true));
 
         assert!(table.cells.is_empty());
+    }
+
+    #[test]
+    fn an_indexed_verb_writes_its_cells_by_the_stated_index() {
+        let table = of(&form("толкнуть"), listed(Aspect::Perfective, false, "3b"));
+
+        assert_eq!(
+            cell_of(
+                &table,
+                VerbForm::Present {
+                    person: Person::Second,
+                    number: Number::Singular
+                }
+            )
+            .as_deref(),
+            Some("толкнёшь")
+        );
+        assert_eq!(
+            cell_of(&table, VerbForm::Imperative(Number::Singular)).as_deref(),
+            Some("толкни")
+        );
+        assert_eq!(
+            cell_of(&table, VerbForm::Past(Bare::Singular(Gender::Feminine))).as_deref(),
+            Some("толкнула")
+        );
+    }
+
+    #[test]
+    fn an_indexed_reflexive_verb_carries_its_particle_into_every_cell() {
+        let table = of(&form("смеяться"), listed(Aspect::Imperfective, true, "6b"));
+
+        assert_eq!(
+            cell_of(
+                &table,
+                VerbForm::Present {
+                    person: Person::First,
+                    number: Number::Singular
+                }
+            )
+            .as_deref(),
+            Some("смеюсь")
+        );
+        assert_eq!(
+            cell_of(&table, VerbForm::Imperative(Number::Singular)).as_deref(),
+            Some("смейся")
+        );
+    }
+
+    #[test]
+    fn a_cell_the_stated_road_refuses_stays_unstated() {
+        let table = of(&form("нести"), listed(Aspect::Imperfective, false, "7b/b"));
+
+        assert_eq!(
+            cell_of(&table, VerbForm::Infinitive).as_deref(),
+            Some("нести")
+        );
+        assert!(
+            cell_of(
+                &table,
+                VerbForm::Present {
+                    person: Person::First,
+                    number: Number::Singular
+                }
+            )
+            .is_none()
+        );
+        assert!(cell_of(&table, VerbForm::Past(Bare::Plural)).is_none());
     }
 
     #[test]

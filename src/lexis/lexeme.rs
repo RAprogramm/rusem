@@ -16,7 +16,7 @@
 
 use crate::grammar::{
     Animacy, Aspect, Gender, Transitivity,
-    conjugation::Conjugation,
+    conjugation::{Conjugation, index::VerbIndex},
     declension::{Declension, index::Index}
 };
 
@@ -31,7 +31,15 @@ pub struct Verb {
     /// Whether the verb carries `-ся`.
     pub reflexive:    bool,
     /// Which set of personal endings the verb takes.
-    pub conjugation:  Conjugation
+    pub conjugation:  Conjugation,
+    /// The index a dictionary states for the verb, in Zaliznyak's notation.
+    ///
+    /// `Some` when a dictionary has spoken: the index then settles the finite
+    /// forms — the class, the stress, the departures — and they are written
+    /// from it exactly. `None` when no dictionary has spoken and the class
+    /// must be derived from the infinitive by § 44 of the 1956 code, which is
+    /// a rule of thumb rather than a fact about the word.
+    pub index:        Option<VerbIndex>
 }
 
 impl Verb {
@@ -53,6 +61,16 @@ impl Verb {
     #[must_use]
     pub const fn has_present(self) -> bool {
         matches!(self.aspect, Aspect::Imperfective)
+    }
+
+    /// The road this verb's finite forms go by, stated once for both
+    /// directions.
+    #[must_use]
+    pub const fn road(&self) -> Road<VerbIndex> {
+        match self.index {
+            Some(index) => Road::Stated(index),
+            None => Road::Derived
+        }
     }
 }
 
@@ -76,26 +94,28 @@ pub struct Noun {
     pub index:      Option<Index>
 }
 
-/// The road a declining noun's forms go by.
+/// The road a changing word's forms go by.
 ///
-/// A stated word goes by the index and a derived one by the pattern, and the
-/// decision is a fact about the word, not about a direction: the writer fills
-/// the paradigm down this road and the reader reads forms back down the same
-/// one. A form written down one road and read down the other would let the
-/// two directions disagree about a word they both know.
+/// A stated word goes by the index its dictionary writes — a noun's
+/// declension index, a verb's conjugation index — and a derived one by the
+/// pattern worked out from its dictionary form. The decision is a fact about
+/// the word, not about a direction: the writer fills the paradigm down this
+/// road and the reader reads forms back down the same one. A form written
+/// down one road and read down the other would let the two directions
+/// disagree about a word they both know.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Road {
-    /// A dictionary has spoken, and the index settles the whole paradigm.
-    Stated(Index),
-    /// No dictionary has spoken: the pattern is worked out from the gender
-    /// and the dictionary form.
+pub enum Road<Stated> {
+    /// A dictionary has spoken, and the index settles the paradigm.
+    Stated(Stated),
+    /// No dictionary has spoken: the pattern is worked out from what the word
+    /// is and its dictionary form.
     Derived
 }
 
 impl Noun {
     /// The road this noun's forms go by, stated once for both directions.
     #[must_use]
-    pub const fn road(&self) -> Road {
+    pub const fn road(&self) -> Road<Index> {
         match self.index {
             Some(index) => Road::Stated(index),
             None => Road::Derived
@@ -176,7 +196,8 @@ mod tests {
             aspect:       Aspect::Imperfective,
             transitivity: Transitivity::Transitive,
             reflexive:    false,
-            conjugation:  Conjugation::First
+            conjugation:  Conjugation::First,
+            index:        None
         }
     }
 

@@ -72,7 +72,7 @@ mod tests {
     use crate::{
         grammar::{
             Animacy, Aspect, Gender, Transitivity,
-            conjugation::Conjugation,
+            conjugation::{self, Conjugation},
             declension::{Declension, index}
         },
         lexis::{Lexeme, Noun, Verb},
@@ -162,11 +162,49 @@ mod tests {
                     aspect: Aspect::Imperfective,
                     transitivity: Transitivity::Transitive,
                     reflexive,
-                    conjugation: Conjugation::First
+                    conjugation: Conjugation::First,
+                    index: None
                 })
             );
 
             assert_eq!(Mirrored.broken(&word), Vec::new(), "{written}");
+        }
+    }
+
+    fn conjugated(written: &str, aspect: Aspect, reflexive: bool, stated: &str) -> Word {
+        Word::new(
+            form(written),
+            Lexeme::Verb(Verb {
+                aspect,
+                transitivity: Transitivity::Transitive,
+                reflexive,
+                conjugation: Conjugation::First,
+                index: Some(
+                    conjugation::index::read(stated)
+                        .unwrap_or_else(|| unreachable!("a stated index"))
+                )
+            })
+        )
+    }
+
+    #[test]
+    fn an_indexed_verb_reads_back_into_every_cell_that_wrote_it() {
+        for word in [
+            conjugated("толкнуть", Aspect::Perfective, false, "3b"),
+            conjugated("тянуть", Aspect::Imperfective, false, "3c"),
+            conjugated("просить", Aspect::Imperfective, false, "4c"),
+            conjugated("писать", Aspect::Imperfective, false, "6c"),
+            conjugated("везти", Aspect::Imperfective, false, "7b/b"),
+            conjugated("умереть", Aspect::Perfective, false, "9b/c(1)"),
+            conjugated("жить", Aspect::Imperfective, false, "16b/c"),
+            conjugated("смеяться", Aspect::Imperfective, true, "6b")
+        ] {
+            assert_eq!(
+                Mirrored.broken(&word),
+                Vec::new(),
+                "{}",
+                word.lemma.as_str()
+            );
         }
     }
 }

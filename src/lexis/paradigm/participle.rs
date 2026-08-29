@@ -183,7 +183,8 @@ mod tests {
             aspect,
             transitivity,
             reflexive,
-            conjugation: Conjugation::First
+            conjugation: Conjugation::First,
+            index: None
         }
     }
 

@@ -60,25 +60,53 @@ const NUMBERS: [Number; 2] = [Number::Singular, Number::Plural];
 /// ```
 #[must_use]
 pub fn cells(written: &str, infinitive: &str) -> Vec<Cell> {
-    let mut found = Vec::new();
-
-    found.extend(present(written, infinitive));
-    found.extend(gone(written, infinitive));
-    found.extend(bidden(written, infinitive));
-
-    found
+    matching(|cell| writes(infinitive, cell, written))
 }
 
-/// The imperative cells a form could be standing in.
+/// Every finite cell the test given admits, walked in the table's order.
 ///
-/// Here the unknown stress is not a reason to refuse: `учи` and `учь` are both
-/// written by the rule, one of them is the word, and a reader that took
-/// neither would refuse a form the language wrote.
-fn bidden(written: &str, infinitive: &str) -> Vec<Cell> {
+/// The walk over the present, the past and the imperative is the reading
+/// itself, and it is stated once: the derived reader here and the stated
+/// reader beside it, [`super::stated::reading`], differ in who writes a cell
+/// out, not in how the table is walked.
+pub(crate) fn matching(admitted: impl Fn(VerbForm) -> bool) -> Vec<Cell> {
     let mut found = Vec::new();
 
     for number in NUMBERS {
-        if writes(infinitive, VerbForm::Imperative(number), written) {
+        for person in PERSONS {
+            if admitted(VerbForm::Present {
+                person,
+                number
+            }) {
+                found.push(Cell {
+                    tense: Tense::Present,
+                    person: Some(person),
+                    gender: None,
+                    number
+                });
+            }
+        }
+    }
+    for gender in Gender::STATED {
+        if admitted(VerbForm::Past(Bare::Singular(gender))) {
+            found.push(Cell {
+                tense:  Tense::Past,
+                person: None,
+                gender: Some(gender),
+                number: Number::Singular
+            });
+        }
+    }
+    if admitted(VerbForm::Past(Bare::Plural)) {
+        found.push(Cell {
+            tense:  Tense::Past,
+            person: None,
+            gender: None,
+            number: Number::Plural
+        });
+    }
+    for number in NUMBERS {
+        if admitted(VerbForm::Imperative(number)) {
             found.push(Cell {
                 tense: Tense::Present,
                 person: None,
@@ -91,60 +119,13 @@ fn bidden(written: &str, infinitive: &str) -> Vec<Cell> {
     found
 }
 
-/// The present cells a form could be standing in.
-fn present(written: &str, infinitive: &str) -> Vec<Cell> {
-    let mut found = Vec::new();
-
-    for number in NUMBERS {
-        for person in PERSONS {
-            let cell = VerbForm::Present {
-                person,
-                number
-            };
-            if writes(infinitive, cell, written) {
-                found.push(Cell {
-                    tense: Tense::Present,
-                    person: Some(person),
-                    gender: None,
-                    number
-                });
-            }
-        }
-    }
-
-    found
-}
-
-/// The past cells a form could be standing in.
-fn gone(written: &str, infinitive: &str) -> Vec<Cell> {
-    let mut found = Vec::new();
-
-    for gender in Gender::STATED {
-        if writes(infinitive, VerbForm::Past(Bare::Singular(gender)), written) {
-            found.push(Cell {
-                tense:  Tense::Past,
-                person: None,
-                gender: Some(gender),
-                number: Number::Singular
-            });
-        }
-    }
-    if writes(infinitive, VerbForm::Past(Bare::Plural), written) {
-        found.push(Cell {
-            tense:  Tense::Past,
-            person: None,
-            gender: None,
-            number: Number::Plural
-        });
-    }
-
-    found
-}
-
 /// Reports whether a cell of this verb is written the way the form arrived.
 ///
 /// Both places of the stress are tried, because the reader does not know it
-/// and the first conjugation writes a different vowel for each.
+/// and the first conjugation writes a different vowel for each. In the
+/// imperative that is also why the unknown stress is not a reason to refuse:
+/// `учи` and `учь` are both written by the rule, one of them is the word, and
+/// a reader that took neither would refuse a form the language wrote.
 fn writes(infinitive: &str, cell: VerbForm, written: &str) -> bool {
     [false, true].into_iter().any(|stressed| {
         inflect::written(infinitive, cell, stressed).is_some_and(|held| same(&held, written))

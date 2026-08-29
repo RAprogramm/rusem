@@ -25,11 +25,13 @@
 pub mod class;
 pub mod endings;
 pub mod imperative;
+pub mod index;
 pub mod inflect;
 pub mod participle;
 pub mod past;
 pub mod reading;
 pub mod reflexive;
+pub mod stated;
 pub mod stems;
 
 /// The set of personal endings a verb takes in the present and the future.

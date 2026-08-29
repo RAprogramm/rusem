@@ -144,7 +144,7 @@ fn gone(infinitive: &str, held: Bare) -> Option<String> {
 /// whole second conjugation takes it — `любят`, `водят`, `строят` — because
 /// its endings are soft by their `и`, whatever consonant precedes them; the
 /// `л` that grows in `люблю` is not what decides.
-fn shape(stem: &str, conjugation: Conjugation) -> Stem {
+pub(crate) fn shape(stem: &str, conjugation: Conjugation) -> Stem {
     let Some(last) = stem.chars().last() else {
         return Stem::Hard;
     };
@@ -178,7 +178,7 @@ const CARRIES_GLIDE: &[char] = &['ю', 'я', 'е', 'ё', 'и'];
 /// itself. A hard vowel after the glide is written as the soft letter that
 /// stands for both. The glide survives only before a consonant, which is where
 /// nothing carries it — `читайте`.
-fn joined(stem: &str, ending: &str) -> String {
+pub(crate) fn joined(stem: &str, ending: &str) -> String {
     let (Some(last), Some(first)) = (stem.chars().last(), ending.chars().next()) else {
         return String::from(stem) + ending;
     };

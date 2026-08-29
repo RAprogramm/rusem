@@ -64,8 +64,10 @@ pub fn past(infinitive: &str, class: Class) -> Option<String> {
 /// stem.
 ///
 /// The cut is a fact about letters, not about the paradigm: whether what it
-/// leaves is a stem of the verb is for the class to say, and [`past`] says it.
-fn cut(infinitive: &str) -> Option<String> {
+/// leaves is a stem of the verb is for the class to say, and [`past`] says it
+/// for the classes read off the infinitive, [`super::stated`] for the ones a
+/// dictionary states by index.
+pub(crate) fn cut(infinitive: &str) -> Option<String> {
     for held in ["ть", "ти", "чь"] {
         if let Some(stem) = infinitive.strip_suffix(held) {
             return Some(String::from(stem));

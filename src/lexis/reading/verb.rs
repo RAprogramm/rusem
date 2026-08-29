@@ -13,14 +13,21 @@
 //! both would refuse a form the language wrote. Writing is stricter — a table
 //! states one form or none — and that is the difference between saying what a
 //! word is and recognizing what someone wrote.
+//!
+//! Which road the finite cells are read down — the index a dictionary states
+//! or the class derived from the infinitive — is the word's own fact,
+//! [`Verb::road`], the same one the writer goes by: one road, both
+//! directions, so the two cannot disagree about a word they both know. The
+//! participles are read off the derived path either way, because that is the
+//! path that writes them.
 
 use crate::{
     grammar::{
         Tense, Voice,
-        conjugation::{participle, reading, reflexive},
+        conjugation::{index::VerbIndex, participle, reading, reflexive, stated},
         form::{Bare, Form, verb::VerbForm}
     },
-    lexis::Verb
+    lexis::{Road, Verb}
 };
 
 /// The four participles a verb may have.
@@ -58,7 +65,7 @@ pub fn of(lemma: &str, held: Verb, written: &str) -> Vec<Form> {
         return Vec::new();
     };
 
-    let mut found = finite(&plain, &bare);
+    let mut found = finite(&plain, &bare, held.road());
     found.extend(borne(&plain, &bare));
 
     found
@@ -73,15 +80,20 @@ fn parted(written: &str, reflexive: bool) -> Option<String> {
     reflexive::bare(written)
 }
 
-/// The finite cells a form could be standing in.
-fn finite(plain: &str, bare: &str) -> Vec<Form> {
+/// The finite cells a form could be standing in, read by the road the word
+/// was written by.
+fn finite(plain: &str, bare: &str, road: Road<VerbIndex>) -> Vec<Form> {
     let mut found = Vec::new();
 
     if bare == plain {
         found.push(Form::Verb(VerbForm::Infinitive));
     }
 
-    for cell in reading::cells(bare, plain) {
+    let cells = match road {
+        Road::Stated(index) => stated::reading::cells(bare, plain, index),
+        Road::Derived => reading::cells(bare, plain)
+    };
+    for cell in cells {
         found.push(Form::Verb(match cell.tense {
             Tense::Past => VerbForm::Past(cell.gender.map_or(Bare::Plural, Bare::Singular)),
             _ => cell
