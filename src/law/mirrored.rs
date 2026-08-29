@@ -145,7 +145,8 @@ mod tests {
 
     #[test]
     fn an_adjective_reads_back_into_every_cell_that_wrote_it() {
-        for written in ["новый", "синий", "строгий"] {
+        for written in ["новый", "синий", "строгий", "красный", "важный", "хороший"]
+        {
             let word = Word::new(form(written), Lexeme::Adjective);
 
             assert_eq!(Mirrored.broken(&word), Vec::new(), "{written}");

@@ -16,15 +16,19 @@
 //! which is meant. That is not an ambiguity to be resolved here: it is the
 //! language stating that the form depends on something outside the word.
 //!
-//! The short form and the comparative are not here. `красен` parts its stem
-//! with a vowel the spelling cannot predict, and a cell the core cannot write
-//! is left unstated.
+//! The short cells and the comparative stand beside the full ones, written
+//! from the same stem by the rules beside the writer,
+//! [`crate::grammar::declension::adjective::short`] and
+//! [`crate::grammar::declension::adjective::compared`]. What those rules
+//! cannot derive they refuse, and a refused cell is simply not here: a
+//! relational adjective's short forms, a suppletive comparative, a neuter
+//! whose letter hangs on an unstated stress. Silence, not a guess.
 
 use crate::{
     grammar::{
         Animacy, Case, Gender, Number,
         declension::adjective,
-        form::{Adjectival, Agreed, Form}
+        form::{Adjectival, Agreed, Bare, Form}
     },
     lexis::Paradigm,
     morphology::WordForm
@@ -68,6 +72,11 @@ pub fn of(lemma: &WordForm) -> Paradigm {
     for case in Case::STATED {
         push(&mut cells, lemma, case, Number::Plural, Gender::Masculine);
     }
+    for gender in Gender::STATED {
+        short(&mut cells, lemma, Bare::Singular(gender));
+    }
+    short(&mut cells, lemma, Bare::Plural);
+    compared(&mut cells, lemma);
 
     Paradigm {
         lemma: lemma.clone(),
@@ -86,6 +95,31 @@ fn push(
     let spellings = spelled(lemma, case, number, gender);
     if !spellings.is_empty() {
         cells.push((cell(case, number, gender), spellings));
+    }
+}
+
+/// Writes one short cell into the table, if the core can spell it.
+///
+/// Animacy does not enter: the short form is said of its noun rather than
+/// agreeing with it in a case, and only the accusative ever shows animacy.
+fn short(cells: &mut Vec<(Form, Vec<WordForm>)>, lemma: &WordForm, held: Bare) {
+    let Some(written) = adjective::short::written(lemma.as_str(), held) else {
+        return;
+    };
+    let spellings = super::spelled(&written);
+    if !spellings.is_empty() {
+        cells.push((Form::Adjective(Adjectival::Short(held)), spellings));
+    }
+}
+
+/// Writes the comparative into the table, if the core can derive it.
+fn compared(cells: &mut Vec<(Form, Vec<WordForm>)>, lemma: &WordForm) {
+    let Some(written) = adjective::compared::written(lemma.as_str()) else {
+        return;
+    };
+    let spellings = super::spelled(&written);
+    if !spellings.is_empty() {
+        cells.push((Form::Adjective(Adjectival::Compared), spellings));
     }
 }
 
@@ -139,9 +173,79 @@ mod tests {
             .collect()
     }
 
+    fn short_of(table: &Paradigm, held: Bare) -> Vec<String> {
+        table
+            .fills(Form::Adjective(Adjectival::Short(held)))
+            .iter()
+            .map(|written| written.as_str().to_owned())
+            .collect()
+    }
+
+    fn compared_of(table: &Paradigm) -> Vec<String> {
+        table
+            .fills(Form::Adjective(Adjectival::Compared))
+            .iter()
+            .map(|written| written.as_str().to_owned())
+            .collect()
+    }
+
     #[test]
-    fn an_adjective_states_a_cell_for_three_genders_and_the_plural() {
-        assert_eq!(of(&form("новый")).len(), 24);
+    fn an_adjective_states_its_full_short_and_compared_cells() {
+        assert_eq!(of(&form("новый")).len(), 29);
+    }
+
+    #[test]
+    fn the_short_cells_are_written_from_the_bare_stem() {
+        let table = of(&form("красный"));
+
+        assert_eq!(
+            short_of(&table, Bare::Singular(Gender::Masculine)),
+            ["красен"]
+        );
+        assert_eq!(
+            short_of(&table, Bare::Singular(Gender::Feminine)),
+            ["красна"]
+        );
+        assert_eq!(short_of(&table, Bare::Singular(Gender::Neuter)), ["красно"]);
+        assert_eq!(short_of(&table, Bare::Plural), ["красны"]);
+    }
+
+    #[test]
+    fn a_stem_closed_by_the_suffix_parts_it_in_the_bare_masculine() {
+        let table = of(&form("важный"));
+
+        assert_eq!(
+            short_of(&table, Bare::Singular(Gender::Masculine)),
+            ["важен"]
+        );
+    }
+
+    #[test]
+    fn the_comparative_takes_its_ending_by_the_stem() {
+        assert_eq!(compared_of(&of(&form("новый"))), ["новее"]);
+        assert_eq!(compared_of(&of(&form("громкий"))), ["громче"]);
+        assert_eq!(compared_of(&of(&form("тихий"))), ["тише"]);
+    }
+
+    #[test]
+    fn a_relational_adjective_keeps_only_its_full_cells() {
+        let table = of(&form("русский"));
+
+        assert_eq!(table.len(), 24);
+        assert!(short_of(&table, Bare::Singular(Gender::Masculine)).is_empty());
+        assert!(compared_of(&table).is_empty());
+    }
+
+    #[test]
+    fn a_cell_that_hangs_on_an_unstated_fact_stays_unstated() {
+        let table = of(&form("хороший"));
+
+        assert_eq!(
+            short_of(&table, Bare::Singular(Gender::Masculine)),
+            ["хорош"]
+        );
+        assert!(short_of(&table, Bare::Singular(Gender::Neuter)).is_empty());
+        assert!(compared_of(&table).is_empty());
     }
 
     #[test]

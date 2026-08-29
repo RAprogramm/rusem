@@ -21,8 +21,20 @@
 //! What is not understood is not thrown away. An index carrying marks the core
 //! has no rules for keeps them and says so, and a caller that would rather
 //! write nothing than write a guess can ask.
+//!
+//! The marks the core does read are typed facts on the index. The star is the
+//! fleeting vowel. The circled numerals are [`circled::Circled`], one cell
+//! each taken from the other pattern. The `, ё` written after the index says
+//! the stem trades `е` for `ё` wherever the scheme holds the stress on the
+//! stem: `жена́` against `жёны`. The marks it does not read — the `°` of the
+//! stems that grow between the numbers (`крестьянин`, `щенок`, `имя`), the
+//! `−` and `÷` of the hypothetical plurals, and the `^` that Zaliznyak
+//! himself defines as a departure only the printed table states — are noted,
+//! never quietly dropped into a plain index.
 
+pub mod circled;
 pub mod falls;
+mod marks;
 
 /// What the stem of a noun ends in.
 ///
@@ -127,11 +139,24 @@ pub struct Index {
     pub accent:   Accent,
     /// Whether the stem parts with a fleeting vowel, written `*`.
     pub fleeting: bool,
+    /// The circled numerals, each one cell by the other pattern.
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub circled:  circled::Circled,
+    /// Whether the stem trades `е` for `ё` with the stress, written `, ё`.
+    ///
+    /// `ё` is a stressed letter, and a word carrying this mark writes it in
+    /// the last syllable of the stem exactly where the scheme holds the
+    /// stress there: `жена́` but `жёны`, `мёд` but `меды́`. Without the mark
+    /// a stem keeps its `е` under stress — `стена́`, `сте́ны` — which is why
+    /// this is a stated fact and not a rule about every stem.
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub yo:       bool,
     /// Whether the index carries marks the core has no rules for.
     ///
-    /// The circled numerals, the degree sign and the rest state departures
-    /// from the pattern, one departure to a mark. A word carrying one declines
-    /// as the pattern says except where it does not, and until each mark is
+    /// The degree sign, the hypothetical-form signs `−` and `÷`, the `^` of
+    /// the individual departures and the joints of compound indexes state
+    /// departures the core has no rules for. A word carrying one declines as
+    /// the pattern says except where it does not, and until each mark is
     /// written out, saying so is the honest answer.
     pub noted:    bool
 }
@@ -153,7 +178,11 @@ pub struct Index {
 /// assert_eq!(parted.accent, Accent::B);
 /// assert!(parted.fleeting);
 ///
-/// let noted = read("1*a(2)").expect("a stated index");
+/// let yoed = read("1d, ё").expect("a stated index");
+/// assert!(yoed.yo);
+/// assert!(!yoed.noted);
+///
+/// let noted = read("1°a").expect("a stated index");
 /// assert!(noted.noted);
 ///
 /// assert!(read("gibberish").is_none());
@@ -176,27 +205,32 @@ pub fn read(written: &str) -> Option<Index> {
     }
 
     let accent = accent(&mut letters)?;
-    if letters.next().is_some() {
-        noted = true;
-    }
+    let tail = marks::read(&mut letters);
 
     Some(Index {
         kind,
         accent,
         fleeting,
-        noted
+        circled: tail.circled,
+        yo: tail.yo,
+        noted: noted || tail.noted
     })
 }
 
 /// Reads the letter of the scheme and the primes after it.
+///
+/// The dictionary source types the primes three ways: an apostrophe, U+2032,
+/// and the doubled prime as a straight quote or two apostrophes — `8f"` and
+/// `8f''` are the same index. Each straight quote counts for two.
 fn accent(letters: &mut core::iter::Peekable<core::str::Chars<'_>>) -> Option<Accent> {
     let letter = letters.next()?;
     let mut primes = 0_usize;
-    while letters
-        .peek()
-        .is_some_and(|held| *held == '\'' || *held == '′')
-    {
-        primes += 1;
+    while let Some(held) = letters.peek() {
+        match held {
+            '\'' | '′' => primes += 1,
+            '"' => primes += 2,
+            _ => break
+        }
         letters.next();
     }
 
@@ -212,5 +246,80 @@ fn accent(letters: &mut core::iter::Peekable<core::str::Chars<'_>>) -> Option<Ac
         ('f', 1) => Some(Accent::FPrime),
         ('f', _) => Some(Accent::FDouble),
         _ => None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{circled::Reach, *};
+
+    fn stated(written: &str) -> Index {
+        read(written).unwrap_or_else(|| unreachable!("a stated index"))
+    }
+
+    #[test]
+    fn the_yo_mark_is_a_typed_fact_and_not_a_note() {
+        let held = stated("4b, ё");
+
+        assert!(held.yo);
+        assert!(!held.noted);
+        assert_eq!(held.kind, Kind::Sibilant);
+        assert_eq!(held.accent, Accent::B);
+    }
+
+    #[test]
+    fn the_star_and_the_yo_mark_stand_together() {
+        let held = stated("1*d, ё");
+
+        assert!(held.fleeting);
+        assert!(held.yo);
+        assert!(!held.noted);
+    }
+
+    #[test]
+    fn a_circled_numeral_is_a_typed_fact_and_not_a_note() {
+        let held = stated("1c(1)");
+
+        assert_eq!(held.circled.nominative, Some(Reach::Whole));
+        assert!(!held.noted);
+
+        let both = stated("1c(1)(2)");
+
+        assert_eq!(both.circled.nominative, Some(Reach::Whole));
+        assert_eq!(both.circled.genitive, Some(Reach::Whole));
+
+        assert_eq!(stated("7a(3)").circled.prepositional, Some(Reach::Whole));
+        assert_eq!(stated("1a((2))").circled.genitive, Some(Reach::Either));
+    }
+
+    #[test]
+    fn the_doubled_prime_is_read_in_both_spellings() {
+        assert_eq!(stated("8f\"").accent, Accent::FDouble);
+        assert_eq!(stated("8f''").accent, Accent::FDouble);
+        assert!(!stated("8f\"").noted);
+    }
+
+    #[test]
+    fn a_mark_without_a_rule_stays_noted() {
+        assert!(stated("1°a").noted);
+        assert!(stated("1a−").noted);
+        assert!(stated("1b-").noted);
+        assert!(stated("1a÷").noted);
+        assert!(stated("1a^").noted);
+        assert!(stated("1a− + 3*b").noted);
+        assert!(stated("1*b // 1a").noted);
+    }
+
+    #[test]
+    fn a_noted_mark_keeps_the_understood_ones_beside_it() {
+        let held = stated("3d(1)−");
+
+        assert_eq!(held.circled.nominative, Some(Reach::Whole));
+        assert!(held.noted);
+
+        let grown = stated("8°c, ё");
+
+        assert!(grown.yo);
+        assert!(grown.noted);
     }
 }

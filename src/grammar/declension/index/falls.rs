@@ -137,7 +137,7 @@ pub const fn on(accent: Accent, case: Case, number: Number, animacy: Animacy) ->
 /// row for it, and the primed schemes `d′` and `f′` name the cell itself.
 /// The plural accusative has a row nowhere, so its stress is the stress of
 /// the row it repeats.
-const fn repeated(case: Case, number: Number, animacy: Animacy) -> Case {
+pub(crate) const fn repeated(case: Case, number: Number, animacy: Animacy) -> Case {
     if !matches!((case, number), (Case::Accusative, Number::Plural)) {
         return case;
     }

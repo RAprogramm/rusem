@@ -9,6 +9,9 @@
 //! — where the dictionary form ends and which shape it declines on — so the
 //! splitting is stated here once and read from both directions.
 
+pub mod compared;
+pub mod short;
+
 use super::{Stem, attributive, spelling};
 use crate::grammar::{Animacy, Case, Gender, Number};
 
@@ -56,6 +59,35 @@ pub fn parted(dictionary: &str) -> Option<(String, Stem)> {
 #[must_use]
 pub fn ending_stressed(dictionary: &str) -> bool {
     dictionary.ends_with("ой")
+}
+
+/// Reports whether a stem is closed by the relational suffix `-ск-`.
+///
+/// School grammar parts adjectives into qualitative and relational, and
+/// states that a relational adjective has no short form and no degrees of
+/// comparison: `русский`, `морской` name a relation, not a quality that could
+/// hold more or less of itself. The suffix that builds them is `-ск-`, so a
+/// stem closed by it refuses the short cells and the comparative. The letters
+/// are all this check reads: a qualitative stem that happens to end in `ск` —
+/// `плоский` — is refused with them, and an unstated cell is silence, not a
+/// wrong form.
+#[must_use]
+pub fn relational(stem: &str) -> bool {
+    stem.ends_with("ск")
+}
+
+/// The stem with its `ё` written `е`, for the cells that do not keep the
+/// dictionary form's stress.
+///
+/// `ё` is a stressed letter and nothing else in Russian, and the full
+/// paradigm keeps the stem's stress where the dictionary form put it —
+/// `тёмный`, `тёмного`. The short forms and the comparative do not: `тёмный`
+/// says `темна́` and `лёгкий` says `легче`, so the lemma's `ё` would assert a
+/// stress those cells may have lost. The 1956 code writes `ё` only where a
+/// misreading must be forestalled (§ 10), which makes `е` the spelling every
+/// word admits, and the derived stem is written with it.
+fn undotted(base: &str) -> String {
+    base.replace('ё', "е")
 }
 
 /// The agreeing word written out in the cell asked for.

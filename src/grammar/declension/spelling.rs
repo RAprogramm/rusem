@@ -65,7 +65,12 @@ const fn bars_soft_vowels(letter: char) -> bool {
 }
 
 /// Reports whether a consonant refuses an unstressed о after it.
-const fn bars_unstressed_o(letter: char) -> bool {
+///
+/// The sibilants and `ц`, by § 4 and § 18: `хорошего` against the stressed
+/// `большого`. A writer who cannot tell whether the vowel is stressed cannot
+/// pick its letter after these consonants, and asks here before writing.
+#[must_use]
+pub const fn bars_unstressed_o(letter: char) -> bool {
     match Letter::of(letter) {
         Some(Letter::Consonant(held)) => held.is_sibilant() || matches!(held, Consonant::Tse),
         _ => false

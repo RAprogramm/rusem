@@ -179,7 +179,7 @@ mod tests {
     fn the_law_is_tried_against_a_word_the_core_can_write() {
         let other = agreeing().map(|held| held.paradigm().len());
 
-        assert_eq!(other, Some(24));
+        assert_eq!(other, Some(29));
     }
 
     #[test]

@@ -102,6 +102,22 @@ pub fn of(stem: &str, word: Word, case: Case, number: Number, stressed: bool) ->
     String::from(stem)
 }
 
+/// Reports whether this cell puts the parting vowel back into the stem.
+///
+/// A masculine of the second paradigm never gains a vowel — its star drops
+/// the one its dictionary form shows — so for it the answer is no in every
+/// cell. For the rest the answer is yes exactly where [`of`] would part the
+/// stem: the cell whose ending is nothing and whose word would otherwise end
+/// in two consonants.
+#[must_use]
+pub const fn parts(word: Word, case: Case, number: Number) -> bool {
+    if matches!(word.gender, Gender::Masculine) && !word.opens {
+        return false;
+    }
+
+    bare(case, number, word.animacy)
+}
+
 /// The parted stem with the softness of a final `л` written out.
 ///
 /// `цапля` parts as `цапел` and is written `цапель`, `земля` as `земель`,

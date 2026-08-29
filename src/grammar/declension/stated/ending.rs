@@ -23,7 +23,11 @@ pub mod third;
 
 use crate::grammar::{
     Animacy, Case, Gender, Number,
-    declension::index::{Index, Kind}
+    declension::index::{
+        Index, Kind,
+        circled::{Circled, Reach},
+        falls
+    }
 };
 
 /// What the cell's own shape has already settled about the word.
@@ -97,6 +101,68 @@ pub const fn of(
             shape.parted
         );
     }
+    if traded(index, case, number) {
+        return "е";
+    }
 
-    second::of(gender, index.kind, case, number, animacy, shape.stressed)
+    second::of(
+        crossed(gender, index.circled, case, number, animacy),
+        index.kind,
+        case,
+        number,
+        animacy,
+        shape.stressed
+    )
+}
+
+/// Reports whether ③ trades this cell's `-и` for `-е`.
+///
+/// The numeral speaks of the stems the index writes `7`, whose prepositional
+/// singular is `-ии`: `Бабий` is `7a(3)` and its prepositional is `о Баби́е`
+/// where `полоний` writes `о поло́нии`.
+const fn traded(index: Index, case: Case, number: Number) -> bool {
+    matches!(index.kind, Kind::Iotated)
+        && matches!(index.circled.prepositional, Some(Reach::Whole))
+        && matches!(case.merged(), Case::Prepositional)
+        && matches!(number, Number::Singular)
+}
+
+/// The gender whose row ① or ② tells this cell to read.
+///
+/// The circled numerals say a cell goes `по чужому образцу` — by the other
+/// pattern. Within the second paradigm the other pattern is the other gender's
+/// row of the same table: ① sends the masculine nominative plural to the
+/// neuter's `-а́` — `дома́`, `снега́` — and the neuter's to the masculine's
+/// `-ы` — `я́блоки`; ② does the same for the genitive plural — `сапо́г`,
+/// `глаз` by the neuter's bare stem, and a neuter's `-ов` by the masculine.
+///
+/// The accusative plural states no row of its own, so it is resolved first to
+/// the row it repeats — the same resolution the stress reader makes, and made
+/// by the same function, so the two cannot drift. A doubled numeral leaves the
+/// row alone: both forms live, and the pattern's own is written.
+const fn crossed(
+    gender: Gender,
+    circled: Circled,
+    case: Case,
+    number: Number,
+    animacy: Animacy
+) -> Gender {
+    if !matches!(number, Number::Plural) {
+        return gender;
+    }
+
+    let held = match falls::repeated(case.merged(), number, animacy) {
+        Case::Nominative => circled.nominative,
+        Case::Genitive => circled.genitive,
+        _ => None
+    };
+    if !matches!(held, Some(Reach::Whole)) {
+        return gender;
+    }
+
+    match gender {
+        Gender::Masculine => Gender::Neuter,
+        Gender::Neuter => Gender::Masculine,
+        other => other
+    }
 }
