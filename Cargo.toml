@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2026 RAprogramm <andrey.rozanov.vl@gmail.com>
+#
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "rusem"
+description = "The Russian language, stated as a program: its letters, sounds, morphemes, paradigms and rules."
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/RAprogramm/rusem"
+authors = ["RAprogramm <andrey.rozanov.vl@gmail.com>"]
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dependencies]
+masterror = { version = "0.30", default-features = false, features = ["std"] }
+serde = { version = "1", default-features = false, features = [
+  "derive",
+], optional = true }
+
+[lints.rust]
+missing_docs = "deny"
+missing_debug_implementations = "warn"
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+undocumented_unsafe_blocks = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+
+[lints.rustdoc]
+broken_intra_doc_links = "deny"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

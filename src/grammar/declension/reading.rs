@@ -26,7 +26,10 @@
 //! cell that could have written this form is returned, and none is preferred.
 
 use super::{noun, spelling};
-use crate::grammar::{Animacy, Case, Gender, Number};
+use crate::{
+    alphabet::vowel::same,
+    grammar::{Animacy, Case, Gender, Number}
+};
 
 /// One cell of the paradigm a written form could have come from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,16 +39,6 @@ pub struct Cell {
     /// The number that cell states.
     pub number: Number
 }
-
-/// The cases the paradigm states a cell for.
-pub(crate) const CASES: [Case; 6] = [
-    Case::Nominative,
-    Case::Genitive,
-    Case::Dative,
-    Case::Accusative,
-    Case::Instrumental,
-    Case::Prepositional
-];
 
 /// Reads a written form back into every cell that could have written it.
 ///
@@ -62,14 +55,36 @@ pub(crate) const CASES: [Case; 6] = [
 /// ```
 #[must_use]
 pub fn cells(written: &str, nominative: &str, gender: Gender, animacy: Animacy) -> Vec<Cell> {
+    matching(
+        written,
+        |case, number| noun::written(nominative, gender, animacy, case, number),
+        |case, number| parted(nominative, gender, case, number, written)
+    )
+}
+
+/// Every cell whose written form, put down by the writer given, is the same
+/// form as what arrived.
+///
+/// The walk over both numbers and the stated cases is the reading itself, and
+/// it is stated once: the derived reader here and the stated reader beside it
+/// differ in who writes a cell out and in what else they admit, not in how
+/// the table is walked. The comparison folds `ё` where everything folds it,
+/// [`crate::alphabet::vowel::same`], and the second question is what a reader
+/// admits beyond the letter-for-letter match — the derived reader passes the
+/// fleeting-vowel admission, the stated reader passes nothing.
+pub(crate) fn matching(
+    written: &str,
+    writes: impl Fn(Case, Number) -> Option<String>,
+    admits: impl Fn(Case, Number) -> bool
+) -> Vec<Cell> {
     let mut found = Vec::new();
 
     for number in [Number::Singular, Number::Plural] {
-        for case in CASES {
-            let Some(held) = noun::written(nominative, gender, animacy, case, number) else {
+        for case in Case::STATED {
+            let Some(held) = writes(case, number) else {
                 continue;
             };
-            if same(&held, written) || parted(nominative, gender, case, number, written) {
+            if same(&held, written) || admits(case, number) {
                 found.push(Cell {
                     case,
                     number
@@ -79,19 +94,6 @@ pub fn cells(written: &str, nominative: &str, gender: Gender, animacy: Animacy) 
     }
 
     found
-}
-
-/// Reports whether two spellings are the same form.
-///
-/// `ё` may always be written `е`, so a comparison that told them apart would
-/// refuse half of what people write.
-pub(crate) fn same(left: &str, right: &str) -> bool {
-    folded(left) == folded(right)
-}
-
-/// The spelling with `ё` written the way it is allowed to be written.
-fn folded(written: &str) -> String {
-    written.replace('ё', "е")
 }
 
 /// Reports whether the form is the cell written with a fleeting vowel.

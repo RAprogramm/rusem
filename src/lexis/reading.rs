@@ -25,19 +25,9 @@ use crate::{
         declension::{Declension, reading, stated},
         form::{Adjectival, Agreed, Form}
     },
-    lexis::{Lexeme, Noun, Word},
+    lexis::{Lexeme, Noun, Road, Word},
     morphology::WordForm
 };
-
-/// The cases a declension states a cell for.
-pub(crate) const CASES: [Case; 6] = [
-    Case::Nominative,
-    Case::Genitive,
-    Case::Dative,
-    Case::Accusative,
-    Case::Instrumental,
-    Case::Prepositional
-];
 
 /// The cells of a word a written form could be standing in.
 ///
@@ -105,16 +95,17 @@ fn noun(lemma: &str, held: Noun, written: &str) -> Vec<Form> {
 
 /// The cells of a declining noun, read by the road the word was written by.
 ///
-/// A word whose dictionary states an index was written through that index,
-/// so it is read through that index too; a word no dictionary holds was
-/// written by the pattern worked out from the gender and the spelling, and is
-/// read the same way. Reading a form down one road that was written down the
+/// Which road that is — the stated index or the worked-out pattern — is not
+/// decided here: [`Noun::road`] states it once, for this reader and for the
+/// writer alike. Reading a form down one road that was written down the
 /// other would make the two directions disagree about words they both know.
 fn declined(lemma: &str, held: Noun, written: &str) -> Vec<reading::Cell> {
-    held.index.map_or_else(
-        || reading::cells(written, lemma, held.gender, held.animacy),
-        |index| stated::reading::cells(written, lemma, held.gender, held.animacy, index)
-    )
+    match held.road() {
+        Road::Stated(index) => {
+            stated::reading::cells(written, lemma, held.gender, held.animacy, index)
+        }
+        Road::Derived => reading::cells(written, lemma, held.gender, held.animacy)
+    }
 }
 
 /// Every cell an indeclinable noun has, when the form is the word itself.
@@ -123,7 +114,7 @@ fn standing(gender: Gender, itself: bool) -> Vec<Form> {
         return Vec::new();
     }
 
-    CASES
+    Case::STATED
         .into_iter()
         .flat_map(|case| {
             [

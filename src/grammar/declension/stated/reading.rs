@@ -8,9 +8,11 @@
 //! way, and it goes by the same road: every cell the index states is written
 //! out and compared with what arrived, so there is one statement of how the
 //! word declines, read backwards, and not a second that could drift from the
-//! first. The comparison folds `ё` to `е`, because a writer may always drop
-//! the diaeresis, and it folds it in one place — the same place the derived
-//! reader folds it.
+//! first. The walk over the cells is the derived reader's walk,
+//! [`reading::matching`](crate::grammar::declension::reading), and the
+//! comparison folds `ё` to `е` where everything in the engine folds it,
+//! [`crate::alphabet::vowel::same`], because a writer may always drop the
+//! diaeresis.
 //!
 //! Three cells the exact path does not produce: the second genitive (`чаю`),
 //! the second locative (`в лесу`) and the vocative. The index does not state
@@ -23,10 +25,10 @@
 //! above this module already does.
 
 use crate::grammar::{
-    Animacy, Gender, Number,
+    Animacy, Gender,
     declension::{
         index::Index,
-        reading::{CASES, Cell, same}
+        reading::{Cell, matching}
     }
 };
 
@@ -56,29 +58,17 @@ pub fn cells(
     animacy: Animacy,
     index: Index
 ) -> Vec<Cell> {
-    let mut found = Vec::new();
-
-    for number in [Number::Singular, Number::Plural] {
-        for case in CASES {
-            let Some(held) = super::written(lemma, gender, animacy, index, case, number) else {
-                continue;
-            };
-            if same(&held, written) {
-                found.push(Cell {
-                    case,
-                    number
-                });
-            }
-        }
-    }
-
-    found
+    matching(
+        written,
+        |case, number| super::written(lemma, gender, animacy, index, case, number),
+        |_, _| false
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grammar::{Case, Gender, declension::index};
+    use crate::grammar::{Case, Gender, Number, declension::index};
 
     fn stated(written: &str) -> Index {
         index::read(written).unwrap_or_else(|| unreachable!("a stated index"))
