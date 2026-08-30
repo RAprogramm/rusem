@@ -46,6 +46,7 @@
 //! | [`frame`] | predicate frames, slots, selectional restrictions |
 //! | [`evidence`] | sources, provenance, confidence |
 //! | [`verdict`] | violations and the outcome of a check |
+//! | [`engine`] | the checker that runs the rules over a phrase |
 //! | [`ports`] | the interfaces the knowledge layers implement |
 //! | [`id`] | stable identifiers of lemmas, senses, morphemes, frames, sources |
 //! | [`error`] | failures of the domain layer |
@@ -63,6 +64,7 @@
 //! ```
 
 pub mod alphabet;
+pub mod engine;
 pub mod error;
 pub mod evidence;
 pub mod frame;

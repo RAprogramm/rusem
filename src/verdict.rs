@@ -16,7 +16,8 @@ use crate::{
     grammar::Case,
     id::SenseId,
     morphology::WordForm,
-    relation::RelationKind
+    relation::RelationKind,
+    rules::Citation
 };
 
 /// How much weight a violation carries.
@@ -45,7 +46,7 @@ pub enum Severity {
 
 /// Something the checker found wrong.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[non_exhaustive]
 pub enum Violation {
@@ -63,6 +64,25 @@ pub enum Violation {
     UnlistedWord {
         /// The form in question.
         form: WordForm
+    },
+
+    /// A spelling the code of 1956 refuses outright.
+    ///
+    /// The rule names the paragraph, the place and the whole word that should
+    /// stand there. The refusal is fatal because the code does not admit the
+    /// written form under any reading: `жыр` is not a spelling that survives
+    /// anywhere in the norm, and the only thing to do is write `жир`.
+    Misspelled {
+        /// The form in question.
+        form:    WordForm,
+        /// The paragraph that found it.
+        cites:   Citation,
+        /// Where the breach stands, counting characters from the word's start.
+        at:      usize,
+        /// What the paragraph says, in its own words.
+        says:    &'static str,
+        /// The whole word the paragraph writes instead.
+        instead: String
     },
 
     /// The form is not in any dictionary, but its structure explains it.
@@ -615,6 +635,9 @@ impl Violation {
             Self::UnlistedWord {
                 ..
             } => "unlisted_word",
+            Self::Misspelled {
+                ..
+            } => "misspelled",
 
             Self::AgreementMismatch {
                 ..
@@ -771,7 +794,10 @@ impl Violation {
             | Self::UnlistedWord {
                 ..
             } => Severity::Doubt,
-            Self::UnknownWord {
+            Self::Misspelled {
+                ..
+            }
+            | Self::UnknownWord {
                 ..
             }
             | Self::AgreementMismatch {
@@ -952,7 +978,7 @@ pub struct Reading {
 
 /// The outcome of checking one phrase.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Verdict {
     /// The readings that survived, best first. Empty when the phrase was
     /// rejected.
@@ -976,6 +1002,39 @@ impl Verdict {
     pub const fn rejected(violations: Vec<Violation>) -> Self {
         Self {
             readings: Vec::new(),
+            violations
+        }
+    }
+
+    /// A verdict that carries the readings that survived and the violations
+    /// found.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rusem::{
+    ///     morphology::WordForm,
+    ///     verdict::{Reading, Verdict, Violation}
+    /// };
+    ///
+    /// let verdict = Verdict::checked(
+    ///     std::vec![Reading {
+    ///         senses:      Vec::new(),
+    ///         frame_sense: None
+    ///     }],
+    ///     std::vec![Violation::UnknownWord {
+    ///         form: WordForm::parse("бббб")?
+    ///     }]
+    /// );
+    ///
+    /// assert!(!verdict.readings.is_empty());
+    /// assert!(!verdict.violations.is_empty());
+    /// # Ok::<(), rusem::error::CoreError>(())
+    /// ```
+    #[must_use]
+    pub const fn checked(readings: Vec<Reading>, violations: Vec<Violation>) -> Self {
+        Self {
+            readings,
             violations
         }
     }

@@ -46,3 +46,22 @@ pub use self::{
     rule::Rule,
     scope::Scope
 };
+
+/// Every rule the engine may ask, in the order they stand in the code.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::{Rule, all};
+///
+/// let rules = all();
+/// assert!(!rules.is_empty());
+///
+/// for rule in rules {
+///     assert!(rule.cites().is_stated());
+/// }
+/// ```
+#[must_use]
+pub fn all() -> Vec<&'static dyn Rule> {
+    svod::written::RULES.to_vec()
+}
