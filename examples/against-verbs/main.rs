@@ -31,6 +31,7 @@ mod entry;
 
 use std::{
     collections::BTreeMap,
+    env,
     fs::File,
     io::{BufRead, BufReader, Error},
     path::Path
@@ -50,25 +51,37 @@ use rusem::{
 /// How many verbs are checked before the stream is closed.
 const CAP: usize = 20_000;
 
-/// How many wrong cells are printed in full.
+/// How many wrong cells are printed in full by default.
+///
+/// The `AGAINST_SHOWN` environment variable overrides the cap when it parses
+/// as a `usize`; an unset or unparsable value keeps the default.
 const SHOWN: usize = 30;
 
-/// The running totals and the first wrong cells written out in full.
+/// The running totals and the wrong cells written out in full, capped at
+/// `shown_cap` lines.
 #[derive(Default)]
 struct Tally {
-    verbs:    usize,
-    cells:    usize,
-    wrong:    usize,
-    refused:  usize,
-    by_class: BTreeMap<String, usize>,
-    shown:    Vec<String>
+    verbs:     usize,
+    cells:     usize,
+    wrong:     usize,
+    refused:   usize,
+    by_class:  BTreeMap<String, usize>,
+    shown:     Vec<String>,
+    shown_cap: usize
 }
 
 fn main() -> Result<(), Error> {
     let raw = Path::new(env!("CARGO_MANIFEST_DIR")).join("data/ruwiktionary.jsonl.gz");
     let lines = BufReader::new(GzDecoder::new(File::open(raw)?)).lines();
 
-    let mut tally = Tally::default();
+    let shown = env::var("AGAINST_SHOWN")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(SHOWN);
+    let mut tally = Tally {
+        shown_cap: shown,
+        ..Tally::default()
+    };
     for line in lines {
         if tally.verbs >= CAP {
             break;
@@ -140,7 +153,7 @@ fn miss(
 ) {
     tally.wrong += 1;
     *tally.by_class.entry(class(stated)).or_insert(0) += 1;
-    if tally.shown.len() < SHOWN {
+    if tally.shown.len() < tally.shown_cap {
         tally.shown.push(format!(
             "{} [{}] {:?}: core {} — dictionary {}",
             held.lemma,
