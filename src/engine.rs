@@ -16,8 +16,22 @@
 //! spelling when the spelling settles it and left unknown otherwise. The crate
 //! reads no files; the adapter that brings in a dictionary, a stress table or
 //! a derivational index is a separate layer.
+//!
+//! # Raw writing and punctuation
+//!
+//! `Facts.writing.written` receives the token exactly as it stands in the
+//! phrase, with its case and any trailing punctuation, because a rule about
+//! what stands between two words — § 157 — needs to see whether the comma is
+//! there. The normalized [`WordForm`] is kept for the analyzer and for the
+//! violation payload. When a rule's correction carries that trailing
+//! punctuation with it, the engine strips it at the mapping site so the
+//! [`Violation::Misspelled::instead`] field names the word, not the mark.
 
-use std::sync::Arc;
+use std::{
+    borrow::Cow,
+    fmt::{Debug, Formatter},
+    sync::Arc
+};
 
 use crate::{
     alphabet::is_letter,
@@ -91,14 +105,22 @@ pub struct Engine {
     morphology: Arc<dyn Morphology>
 }
 
-impl core::fmt::Debug for Engine {
-    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl Debug for Engine {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.debug_struct("Engine").finish_non_exhaustive()
     }
 }
 
 impl Engine {
     /// Builds an engine around a morphological analyzer.
+    ///
+    /// # Arguments
+    ///
+    /// * `morphology` — the analyzer the engine asks about every word.
+    ///
+    /// # Returns
+    ///
+    /// A checker ready to run the rules of the code of 1956.
     ///
     /// # Examples
     ///
@@ -135,6 +157,10 @@ impl Engine {
 
     /// Returns the analyzer the engine asks about words.
     ///
+    /// # Returns
+    ///
+    /// A reference to the owned [`Arc<dyn Morphology>`].
+    ///
     /// # Examples
     ///
     /// ```
@@ -169,6 +195,15 @@ impl Engine {
 }
 
 impl Checker for Engine {
+    /// Runs the code of 1956 over a phrase.
+    ///
+    /// # Arguments
+    ///
+    /// * `phrase` — the text to check.
+    ///
+    /// # Returns
+    ///
+    /// A [`Verdict`] with the readings that survived and every violation found.
     fn check(&self, phrase: &str) -> Result<Verdict> {
         let mut violations = Vec::new();
         let tokens = tokenize(phrase, &mut violations);
@@ -217,12 +252,10 @@ impl Checker for Engine {
 
             let stress = of_spelling(form.as_str());
             let proper = raw.chars().next().is_some_and(char::is_uppercase);
-            let next = tokens
-                .get(place + 1)
-                .map(|(next_form, _)| next_form.as_str());
+            let next = tokens.get(place + 1).map(|(_, next_raw)| next_raw.as_str());
             let facts = Facts {
                 writing: Writing {
-                    written: form.as_str(),
+                    written: raw.as_str(),
                     next
                 },
                 about:   About {
@@ -236,7 +269,7 @@ impl Checker for Engine {
 
             for rule in rules::all() {
                 for found in rule::asked(rule, &facts) {
-                    violations.push(into_misspelled(form.clone(), found));
+                    violations.push(into_misspelled(form.clone(), &found));
                 }
             }
         }
@@ -255,34 +288,71 @@ fn letters_only(raw: &str) -> Option<WordForm> {
 }
 
 fn tokenize(phrase: &str, violations: &mut Vec<Violation>) -> Vec<(WordForm, String)> {
-    phrase
-        .split(|symbol: char| !is_token_char(symbol))
-        .filter(|raw| !raw.is_empty())
-        .filter_map(|raw| {
-            WordForm::parse(raw).map_or_else(
-                |_| {
-                    if raw.chars().any(is_letter)
-                        && let Some(form) = letters_only(raw)
-                    {
-                        violations.push(Violation::UnknownWord {
-                            form
-                        });
-                    }
-                    None
-                },
-                |form| Some((form, raw.to_string()))
-            )
-        })
-        .collect()
+    let mut tokens = Vec::new();
+    let mut chars = phrase.chars().peekable();
+
+    while let Some(symbol) = chars.next() {
+        if !is_token_char(symbol) {
+            continue;
+        }
+
+        let mut raw = String::new();
+        raw.push(symbol);
+
+        while let Some(&next) = chars.peek() {
+            if !is_token_char(next) {
+                break;
+            }
+            raw.push(next);
+            chars.next();
+        }
+
+        while let Some(&next) = chars.peek() {
+            if next.is_whitespace() || is_token_char(next) {
+                break;
+            }
+            raw.push(next);
+            chars.next();
+        }
+
+        let word: String = raw
+            .chars()
+            .take_while(|&held| is_token_char(held))
+            .collect();
+
+        if let Ok(form) = WordForm::parse(&word) {
+            tokens.push((form, raw));
+        } else if word.chars().any(is_letter)
+            && let Some(form) = letters_only(&word)
+        {
+            violations.push(Violation::UnknownWord {
+                form
+            });
+        }
+    }
+
+    tokens
 }
 
-fn into_misspelled(form: WordForm, found: Found) -> Violation {
+fn clean_instead(instead: &str) -> String {
+    let letters: Vec<char> = instead.chars().collect();
+    let trailing = letters
+        .iter()
+        .rev()
+        .take_while(|symbol| !is_token_char(**symbol))
+        .count();
+    let keep = letters.len().saturating_sub(trailing);
+
+    letters.into_iter().take(keep).collect()
+}
+
+fn into_misspelled(form: WordForm, found: &Found) -> Violation {
     Violation::Misspelled {
         form,
         cites: found.cites,
         at: found.at,
-        says: found.says,
-        instead: found.instead
+        says: Cow::Borrowed(found.says),
+        instead: clean_instead(&found.instead)
     }
 }
 
@@ -324,7 +394,9 @@ mod tests {
     impl Morphology for Stub {
         fn analyze(&self, form: &WordForm) -> Result<Readings> {
             let readings = match form.as_str() {
-                "вода" | "жыр" => std::vec![reading(form, PartOfSpeech::Adverb, false)],
+                "вода" | "жыр" | "увы" => {
+                    std::vec![reading(form, PartOfSpeech::Adverb, false)]
+                }
                 "бббб" => std::vec![reading(form, PartOfSpeech::Noun, true)],
                 _ => Vec::new()
             };
@@ -367,6 +439,46 @@ mod tests {
                 instead,
                 ..
             } if instead == "жир"
+        ));
+    }
+
+    #[test]
+    fn a_trailing_comma_does_not_pollute_the_correction() {
+        let engine = Engine::new(Arc::new(Stub));
+        let verdict = engine.check("жыр,").expect("a verdict");
+
+        assert_eq!(verdict.violations.len(), 1);
+        assert!(matches!(
+            &verdict.violations[0],
+            Violation::Misspelled {
+                instead,
+                ..
+            } if instead == "жир"
+        ));
+    }
+
+    #[test]
+    fn a_comma_after_an_interjection_is_not_a_violation() {
+        let engine = Engine::new(Arc::new(Stub));
+        let verdict = engine.check("увы, вода").expect("a verdict");
+
+        assert!(verdict.violations.is_empty());
+    }
+
+    #[test]
+    fn a_missing_comma_after_an_interjection_is_found() {
+        let engine = Engine::new(Arc::new(Stub));
+        let verdict = engine.check("увы вода").expect("a verdict");
+
+        assert_eq!(verdict.violations.len(), 1);
+        let held = &verdict.violations[0];
+        assert_eq!(held.kind(), "misspelled");
+        assert!(matches!(
+            held,
+            Violation::Misspelled {
+                instead,
+                ..
+            } if instead == "увы, вода"
         ));
     }
 

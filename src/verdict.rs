@@ -9,7 +9,7 @@
 //! verdict can repair the phrase instead of resampling it, and a person reading
 //! it can disagree with the engine on the merits.
 
-use std::{string::String, vec::Vec};
+use std::{borrow::Cow, string::String, vec::Vec};
 
 use crate::{
     frame::{Constraint, SemanticRole, SlotForm},
@@ -46,7 +46,7 @@ pub enum Severity {
 
 /// Something the checker found wrong.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[non_exhaustive]
 pub enum Violation {
@@ -80,7 +80,7 @@ pub enum Violation {
         /// Where the breach stands, counting characters from the word's start.
         at:      usize,
         /// What the paragraph says, in its own words.
-        says:    &'static str,
+        says:    Cow<'static, str>,
         /// The whole word the paragraph writes instead.
         instead: String
     },
@@ -978,7 +978,7 @@ pub struct Reading {
 
 /// The outcome of checking one phrase.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Verdict {
     /// The readings that survived, best first. Empty when the phrase was
     /// rejected.

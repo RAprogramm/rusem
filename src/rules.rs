@@ -49,6 +49,14 @@ pub use self::{
 
 /// Every rule the engine may ask, in the order they stand in the code.
 ///
+/// # Arguments
+///
+/// Takes no arguments.
+///
+/// # Returns
+///
+/// A list of every paragraph the engine knows, each as a [`Rule`].
+///
 /// # Examples
 ///
 /// ```
