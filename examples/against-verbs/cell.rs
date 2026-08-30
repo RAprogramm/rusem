@@ -19,6 +19,8 @@
 //! tags a first-person imperative is a form the core's paradigm does not
 //! state.
 
+mod variants;
+
 use rusem::grammar::{
     Gender, Number, Person,
     form::{Bare, verb::VerbForm}
@@ -34,7 +36,7 @@ pub(crate) fn read(forms: &[Value]) -> Vec<(VerbForm, Vec<String>)> {
         let Some(printed) = form["form"].as_str() else {
             continue;
         };
-        let variants = variants(printed);
+        let variants = variants::read(printed);
         let Some(first) = variants.first() else {
             continue;
         };
@@ -135,41 +137,4 @@ fn current(tags: &[&str]) -> Option<VerbForm> {
         person: person?,
         number: number?
     })
-}
-
-/// The variants one printed cell holds, each cleaned to plain lowercase
-/// letters.
-///
-/// The dictionary prints stress with the combining acute and grave, marks
-/// footnotes with `^`, `△` and `*`, and writes the secondary stress on `и`
-/// and `е` as the precomposed `ѝ` and `ѐ`, which are not letters of the
-/// alphabet and go back to the letters they dress. A cell the dictionary
-/// declines to fill prints the bare footnote star and nothing else — the
-/// imperative of `видеть` is `*` — and once the marks go, such a cell is
-/// empty and drops out: the dictionary printed no form there. Variants stand
-/// in one cell behind `//`, and a table of doubled stress writes them behind
-/// a single ` / `; splitting on the one slash reads both, since the empty
-/// piece between two of them is dropped. `ё` is left exactly as printed:
-/// whether the engine writes it where the dictionary does is part of what is
-/// checked.
-fn variants(printed: &str) -> Vec<String> {
-    printed
-        .split('/')
-        .map(|variant| {
-            variant
-                .trim()
-                .chars()
-                .filter_map(|letter| match letter {
-                    '\u{301}' | '\u{300}' | '^' | '△' | '*' => None,
-                    'ѝ' => Some('и'),
-                    'ѐ' => Some('е'),
-                    'Ѝ' => Some('И'),
-                    'Ѐ' => Some('Е'),
-                    kept => Some(kept)
-                })
-                .flat_map(char::to_lowercase)
-                .collect()
-        })
-        .filter(|variant: &String| !variant.is_empty())
-        .collect()
 }

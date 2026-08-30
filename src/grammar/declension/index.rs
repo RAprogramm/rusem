@@ -322,4 +322,16 @@ mod tests {
         assert!(grown.yo);
         assert!(grown.noted);
     }
+
+    #[test]
+    fn every_kind_reads_back_to_its_digit() {
+        assert_eq!(Kind::Hard.digit(), 1);
+        assert_eq!(Kind::Soft.digit(), 2);
+        assert_eq!(Kind::Velar.digit(), 3);
+        assert_eq!(Kind::Sibilant.digit(), 4);
+        assert_eq!(Kind::Tse.digit(), 5);
+        assert_eq!(Kind::Glide.digit(), 6);
+        assert_eq!(Kind::Iotated.digit(), 7);
+        assert_eq!(Kind::Third.digit(), 8);
+    }
 }

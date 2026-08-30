@@ -15,6 +15,8 @@
 //! `плюнуть 3a(2)` writes `плюнь`, `вылезти 7a(3)` writes `вылези` in the
 //! singular and `вылезьте` in the plural.
 
+mod labial;
+
 use super::stem;
 use crate::grammar::{
     Number,
@@ -56,7 +58,7 @@ fn forms(infinitive: &str, index: VerbIndex) -> Option<(String, String)> {
         return Some(pair(grown));
     }
 
-    Some(closed(held, index))
+    Some(closed(infinitive, held, index))
 }
 
 /// The stem the imperative is built on.
@@ -93,8 +95,8 @@ fn eleventh(infinitive: &str, index: VerbIndex) -> Option<(String, String)> {
 }
 
 /// The ending a consonant stem takes, the scheme's stress and the numerals
-/// bending it.
-fn closed(held: String, index: VerbIndex) -> (String, String) {
+/// bending it — or the soft sign [`labial`] states for its root.
+fn closed(infinitive: &str, held: String, index: VerbIndex) -> (String, String) {
     if matches!(index.circled.imperative_split, Some(Reach::Whole)) {
         let one = held.clone() + Ending::Vowel.written();
         let many = held + Ending::SoftSign.written() + imperative::PLURAL;
@@ -104,38 +106,18 @@ fn closed(held: String, index: VerbIndex) -> (String, String) {
     let stressed = matches!(index.present, Scheme::B | Scheme::C);
     let mut ending = imperative::of(&held, stressed);
     if matches!(ending, Ending::Vowel)
-        && matches!(index.circled.imperative_soft, Some(Reach::Whole))
+        && (matches!(index.circled.imperative_soft, Some(Reach::Whole))
+            || labial::soft(infinitive, index))
     {
         ending = Ending::SoftSign;
     }
     let stem = if matches!(ending, Ending::SoftSign) {
-        shed(held, index)
+        labial::shed(held, index)
     } else {
         held
     };
 
     pair(stem + ending.written())
-}
-
-/// The stem without the `л` a class-6 labial grows, which stands only
-/// before a vowel.
-///
-/// `сыпать` conjugates `сыплю, сыплешь` and keeps the `л` before the
-/// imperative's `-и` — `дремать` commands `дремли` — but a soft sign closes
-/// the bare labial: `высыпаться 6a(2)` commands `высыпься`, not `высыплься`,
-/// and Zaliznyak's own table for `сыпать` prints `сыпь`.
-fn shed(held: String, index: VerbIndex) -> String {
-    let mut letters = held.chars().rev();
-    let grown = matches!(index.kind, Kind::Six)
-        && letters.next() == Some(crate::morphemics::alternation::EPENTHESIS)
-        && letters
-            .next()
-            .is_some_and(crate::morphemics::alternation::takes_epenthesis);
-    if !grown {
-        return held;
-    }
-
-    held.chars().take(held.chars().count() - 1).collect()
 }
 
 /// The plural beside the singular, which is the singular with `-те` after
@@ -202,6 +184,18 @@ mod tests {
         assert_eq!(one("тереть", "9b").as_deref(), Some("три"));
         assert_eq!(one("умереть", "9b/c(1)").as_deref(), Some("умри"));
         assert_eq!(one("спать", "5b/c").as_deref(), Some("спи"));
+    }
+
+    #[test]
+    fn the_stated_labial_root_sheds_its_letter_and_the_rest_keep_it() {
+        assert_eq!(one("насыпать", "6a").as_deref(), Some("насыпь"));
+        assert_eq!(
+            bid("насыпать", "6a", Number::Plural).as_deref(),
+            Some("насыпьте")
+        );
+        assert_eq!(one("колебать", "6a").as_deref(), Some("колебли"));
+        assert_eq!(one("дремать", "6c").as_deref(), Some("дремли"));
+        assert_eq!(one("трепать", "6c").as_deref(), Some("трепли"));
     }
 
     #[test]

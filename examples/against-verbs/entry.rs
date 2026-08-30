@@ -39,22 +39,28 @@ const NAMED: &str = "Русские глаголы, спряжение ";
 ///
 /// A verb the dump tags `biaspectual` states both aspects at once, which the
 /// core's [`Aspect`] does not write, so such a verb is left out the same way
-/// a noun of two stated genders is.
+/// a noun of two stated genders is. An entry whose categories state two
+/// different indices — `глаголать` carries both `1a` and `6a`, and the
+/// printed table may follow either — states no one index, so it is left out
+/// too.
 pub(crate) fn read(line: &str) -> Option<Entry> {
     let held: Value = serde_json::from_str(line).ok()?;
     if held["lang_code"].as_str() != Some("ru") || held["pos"].as_str() != Some("verb") {
         return None;
     }
 
-    let written = held["categories"]
+    let mut stated = held["categories"]
         .as_array()?
         .iter()
         .filter_map(Value::as_str)
-        .find_map(|name| {
+        .filter_map(|name| {
             name.strip_prefix(CATEGORY)
                 .or_else(|| name.strip_prefix(NAMED))
-        })?
-        .to_owned();
+        });
+    let written = stated.next()?.to_owned();
+    if stated.any(|other| other != written) {
+        return None;
+    }
 
     let tags = held["tags"].as_array()?;
     let aspect = aspect(tags)?;
@@ -111,5 +117,34 @@ fn transitivity(tags: &[Value]) -> Option<Transitivity> {
     match stated.as_slice() {
         [one] => Some(*one),
         _ => None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn line(categories: &str) -> String {
+        format!(
+            r#"{{"word":"глаголать","lang_code":"ru","pos":"verb","categories":[{categories}],"tags":["imperfective","transitive"],"forms":[]}}"#
+        )
+    }
+
+    #[test]
+    fn one_stated_index_reads() {
+        let held = read(&line(r#""Глаголы, спряжение 6a""#));
+        assert_eq!(held.map(|found| found.written), Some(String::from("6a")));
+    }
+
+    #[test]
+    fn two_different_stated_indices_state_no_one_index() {
+        let held = read(&line(r#""Глаголы, спряжение 1a","Глаголы, спряжение 6a""#));
+        assert!(held.is_none());
+    }
+
+    #[test]
+    fn the_same_index_stated_twice_is_one_index() {
+        let held = read(&line(r#""Глаголы, спряжение 6a","Глаголы, спряжение 6a""#));
+        assert_eq!(held.map(|found| found.written), Some(String::from("6a")));
     }
 }

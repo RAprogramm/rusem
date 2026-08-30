@@ -308,6 +308,52 @@ mod tests {
     }
 
     #[test]
+    fn the_grown_labial_writes_the_iotated_endings() {
+        six(
+            "трепать",
+            "6c",
+            [
+                "треплю",
+                "треплешь",
+                "треплет",
+                "треплем",
+                "треплете",
+                "треплют"
+            ]
+        );
+        six(
+            "колебать",
+            "6a",
+            [
+                "колеблю",
+                "колеблешь",
+                "колеблет",
+                "колеблем",
+                "колеблете",
+                "колеблют"
+            ]
+        );
+        assert_eq!(
+            cell("зыбать", "6a", Person::First, Number::Singular).as_deref(),
+            Some("зыблю")
+        );
+        assert_eq!(
+            cell("дремать", "6c", Person::Third, Number::Plural).as_deref(),
+            Some("дремлют")
+        );
+
+        let held = index::read("6c").unwrap_or_else(|| unreachable!("a stated index"));
+        let first = VerbForm::Present {
+            person: Person::First,
+            number: Number::Singular
+        };
+        assert_eq!(
+            written("истрепаться", held, first, true).as_deref(),
+            Some("истреплюсь")
+        );
+    }
+
+    #[test]
     fn the_consonant_stems_conjugate_where_the_spelling_shows_them() {
         six(
             "лезть",

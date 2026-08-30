@@ -140,10 +140,12 @@ fn gone(infinitive: &str, held: Bare) -> Option<String> {
 /// How the stem ends, for the purpose of the ending that follows it.
 ///
 /// A verb stem is asked this differently from a noun stem. A sibilant refuses
-/// the soft vowel wherever it stands. A vowel or a glide takes it. And the
+/// the soft vowel wherever it stands. A vowel or a glide takes it. A final
+/// `л` takes it too: the `л` a labial grows is soft wherever it stands —
+/// `треплю, колеблют, дремлют` — and the classes whose own `л` closes the
+/// present stem write the same soft endings, `колют, мелют, стелют`. And the
 /// whole second conjugation takes it — `любят`, `водят`, `строят` — because
-/// its endings are soft by their `и`, whatever consonant precedes them; the
-/// `л` that grows in `люблю` is not what decides.
+/// its endings are soft by their `и`, whatever consonant precedes them.
 pub(crate) fn shape(stem: &str, conjugation: Conjugation) -> Stem {
     let Some(last) = stem.chars().last() else {
         return Stem::Hard;
@@ -152,7 +154,10 @@ pub(crate) fn shape(stem: &str, conjugation: Conjugation) -> Stem {
     if stem::is_sibilant(last) {
         return Stem::Hard;
     }
-    if crate::alphabet::is_vowel(last) || last == GLIDE {
+    if crate::alphabet::is_vowel(last)
+        || last == GLIDE
+        || last == crate::morphemics::alternation::EPENTHESIS
+    {
         return Stem::Soft;
     }
     if matches!(conjugation, Conjugation::Second) {
