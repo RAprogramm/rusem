@@ -29,7 +29,7 @@
 
 use std::{
     borrow::Cow,
-    fmt::{Debug, Formatter},
+    fmt::{Debug, Formatter, Result as FormatResult},
     sync::Arc
 };
 
@@ -106,7 +106,7 @@ pub struct Engine {
 }
 
 impl Debug for Engine {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> FormatResult {
         formatter.debug_struct("Engine").finish_non_exhaustive()
     }
 }
@@ -156,6 +156,10 @@ impl Engine {
     }
 
     /// Returns the analyzer the engine asks about words.
+    ///
+    /// # Arguments
+    ///
+    /// Takes no arguments.
     ///
     /// # Returns
     ///

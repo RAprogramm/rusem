@@ -1009,6 +1009,15 @@ impl Verdict {
     /// A verdict that carries the readings that survived and the violations
     /// found.
     ///
+    /// # Arguments
+    ///
+    /// * `readings` — the readings that survived the check.
+    /// * `violations` — every violation the rules found.
+    ///
+    /// # Returns
+    ///
+    /// A verdict that keeps both lists as they were given.
+    ///
     /// # Examples
     ///
     /// ```
