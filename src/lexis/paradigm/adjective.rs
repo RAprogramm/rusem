@@ -30,7 +30,7 @@ use crate::{
         declension::adjective,
         form::{Adjectival, Agreed, Bare, Form}
     },
-    lexis::Paradigm,
+    lexis::paradigm::Paradigm,
     morphology::WordForm
 };
 

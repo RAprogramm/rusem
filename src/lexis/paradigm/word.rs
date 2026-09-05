@@ -18,12 +18,8 @@
 //! and the reader gets no cells at all. That is the honest answer: nothing is
 //! known, as against `стол` in the nominative, which is known.
 
-use super::{adjective, noun, verb};
-use crate::{
-    grammar::form::Form,
-    lexis::{Lexeme, Paradigm},
-    morphology::WordForm
-};
+use super::{Paradigm, adjective, noun, verb};
+use crate::{grammar::form::Form, lexis::lexeme::Lexeme, morphology::WordForm};
 
 /// Builds the paradigm of a word from what the word is.
 ///

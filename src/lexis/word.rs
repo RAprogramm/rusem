@@ -12,7 +12,10 @@
 
 use crate::{
     grammar::form::Form,
-    lexis::{Lexeme, Paradigm, paradigm::word},
+    lexis::{
+        lexeme::Lexeme,
+        paradigm::{Paradigm, word}
+    },
     morphology::WordForm,
     rules::Parts
 };

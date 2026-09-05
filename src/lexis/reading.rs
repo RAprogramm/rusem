@@ -25,7 +25,10 @@ use crate::{
         declension::{Declension, reading, stated},
         form::{Adjectival, Agreed, Form}
     },
-    lexis::{Lexeme, Noun, Road, Word},
+    lexis::{
+        lexeme::{Lexeme, Noun, Road},
+        word::Word
+    },
     morphology::WordForm
 };
 

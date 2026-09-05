@@ -21,7 +21,10 @@ use crate::{
         declension::{Declension, adjective, noun as declined, stated},
         form::{Agreed, Form}
     },
-    lexis::{Noun, Paradigm, Road},
+    lexis::{
+        lexeme::{Noun, Road},
+        paradigm::Paradigm
+    },
     morphology::WordForm
 };
 

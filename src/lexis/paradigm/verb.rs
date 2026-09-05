@@ -36,7 +36,10 @@ use crate::{
         conjugation::{class, imperative, index::VerbIndex, inflect, reflexive, stated, stems},
         form::{Bare, Form, verb::VerbForm}
     },
-    lexis::{Paradigm, Road, Verb},
+    lexis::{
+        lexeme::{Road, Verb},
+        paradigm::Paradigm
+    },
     morphology::WordForm
 };
 

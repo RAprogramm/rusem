@@ -27,7 +27,7 @@ use crate::{
             verb::{Participle, VerbForm}
         }
     },
-    lexis::Verb,
+    lexis::lexeme::Verb,
     morphology::WordForm
 };
 

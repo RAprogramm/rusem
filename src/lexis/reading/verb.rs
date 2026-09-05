@@ -27,7 +27,7 @@ use crate::{
         conjugation::{index::VerbIndex, participle, reading, reflexive, stated},
         form::{Bare, Form, verb::VerbForm}
     },
-    lexis::{Road, Verb}
+    lexis::lexeme::{Road, Verb}
 };
 
 /// The four participles a verb may have.
