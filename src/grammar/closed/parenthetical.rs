@@ -205,9 +205,12 @@ mod tests {
 
     #[test]
     fn no_list_holds_a_word_twice_and_no_word_is_on_two_lists() {
-        let mut every: Vec<&str> =
-            [Parenthetical::ALWAYS, Parenthetical::NEVER, Parenthetical::EITHER]
-                .concat();
+        let mut every: Vec<&str> = [
+            Parenthetical::ALWAYS,
+            Parenthetical::NEVER,
+            Parenthetical::EITHER
+        ]
+        .concat();
         let counted = every.len();
         every.sort_unstable();
         every.dedup();
