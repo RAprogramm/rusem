@@ -22,19 +22,36 @@ use crate::{
     rules::{Citation, Findings, Found, Scope, found::spelled, scope}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::whole(5);
+/// The paragraph as a rule: what it cites and what it is about.
+///
+/// Holds the citation and the scope together so the engine can list the
+/// paragraph alongside the others. The judging function [`found`] stays
+/// free.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::unstressed_o::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 5);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-pub const SCOPE: Scope = Scope {
-    parts:   &[],
-    cases:   &[],
-    numbers: &[],
-    needs:   scope::Needs {
-        stress: true,
-        parts:  false
-    }
-};
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::whole(5);
+
+    /// What this rule is about.
+    pub const SCOPE: Scope = Scope {
+        parts:   &[],
+        cases:   &[],
+        numbers: &[],
+        needs:   scope::Needs {
+            stress: true,
+            parts:  false
+        }
+    };
+}
 
 /// What the paragraph says when it is broken.
 const SAYS: &str = "в неударяемом слоге после шипящей пишется е, а не о";
@@ -93,7 +110,12 @@ pub fn found(written: &str, native: bool, stress: &Stressed) -> Findings {
             continue;
         }
 
-        held.push(Found::new(CITES, at, SAYS, spelled(written, at, WRITTEN)));
+        held.push(Found::new(
+            Rule::CITES,
+            at,
+            SAYS,
+            spelled(written, at, WRITTEN)
+        ));
     }
 
     held
@@ -112,8 +134,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 5);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 5);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]
@@ -129,7 +151,7 @@ mod tests {
         let held = found("горошок", true, &first);
 
         assert_eq!(held.len(), 1);
-        assert_eq!(held[0].cites, CITES);
+        assert_eq!(held[0].cites, Rule::CITES);
         assert_eq!(held[0].at, 5);
         assert_eq!(held[0].instead, "горошек");
     }

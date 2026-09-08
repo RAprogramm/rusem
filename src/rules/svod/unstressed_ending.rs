@@ -41,24 +41,41 @@ use crate::{
     rules::{Citation, Findings, Found, Scope, found::spelled}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::whole(40);
-
-/// What this rule is about.
+/// The paragraph as a rule: what it cites and what it is about.
 ///
-/// Nouns in the singular, in the dative or the prepositional. The paragraph
-/// admits the dative only for the feminine, and that is asked in [`found`]
-/// rather than here: a scope filters on the part, the case and the number,
-/// and the gender is read off the form where the word states it.
-pub const SCOPE: Scope = Scope {
-    parts:   &[PartOfSpeech::Noun],
-    cases:   &[Case::Dative, Case::Prepositional],
-    numbers: &[Number::Singular],
-    needs:   crate::rules::scope::Needs {
-        stress: true,
-        parts:  false
-    }
-};
+/// Holds the citation and the scope together so the engine can list the
+/// paragraph alongside the others. The judging function [`found`] stays
+/// free.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::unstressed_ending::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 40);
+/// ```
+pub struct Rule;
+
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::whole(40);
+
+    /// What this rule is about.
+    ///
+    /// Nouns in the singular, in the dative or the prepositional. The paragraph
+    /// admits the dative only for the feminine, and that is asked in [`found`]
+    /// rather than here: a scope filters on the part, the case and the number,
+    /// and the gender is read off the form where the word states it.
+    pub const SCOPE: Scope = Scope {
+        parts:   &[PartOfSpeech::Noun],
+        cases:   &[Case::Dative, Case::Prepositional],
+        numbers: &[Number::Singular],
+        needs:   crate::rules::scope::Needs {
+            stress: true,
+            parts:  false
+        }
+    };
+}
 
 /// What the paragraph says when it is broken.
 const SAYS: &str = "в неударяемом окончании после и пишется и";
@@ -121,7 +138,7 @@ const fn outside(form: Form) -> bool {
 #[must_use]
 pub fn found(written: &str, form: Form, stress: &Stressed) -> Findings {
     let mut held = Findings::new();
-    if !SCOPE.admits(form) || outside(form) || !stress.is_settled() {
+    if !Rule::SCOPE.admits(form) || outside(form) || !stress.is_settled() {
         return held;
     }
     if stress.ending_stressed(crate::phonetics::stress::vowels(written)) {
@@ -140,7 +157,12 @@ pub fn found(written: &str, form: Form, stress: &Stressed) -> Findings {
         return held;
     }
 
-    held.push(Found::new(CITES, at, SAYS, spelled(written, at, GLIDE)));
+    held.push(Found::new(
+        Rule::CITES,
+        at,
+        SAYS,
+        spelled(written, at, GLIDE)
+    ));
     held
 }
 
@@ -161,8 +183,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 40);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 40);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]

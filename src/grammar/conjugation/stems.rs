@@ -151,7 +151,7 @@ pub fn first_person(present_stem: &str, class: Class) -> String {
 
     if alternation::takes_epenthesis(last) {
         let mut held = String::from(present_stem);
-        held.push(alternation::EPENTHESIS);
+        held.push(alternation::Kind::EPENTHESIS);
         return held;
     }
 

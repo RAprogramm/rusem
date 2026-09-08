@@ -52,30 +52,32 @@ pub enum Declension {
     Indeclinable
 }
 
-/// The eleven nouns that take endings from more than one pattern.
-///
-/// Ten of them end in `-мя` and grow a `-ен-`: in the singular before every
-/// ending but the nominative and the accusative — `время`, `времени` — and in
-/// the plural throughout, except the genitive, whose ending carries the
-/// growth in itself — `времена`, `временам`, but `времён`. `путь` is
-/// masculine and declines as a feminine noun in `ь` except in the
-/// instrumental, where it says `путём`; it grows nothing.
-pub const MIXED: &[&str] = &[
-    "бремя",
-    "время",
-    "вымя",
-    "знамя",
-    "имя",
-    "пламя",
-    "племя",
-    "семя",
-    "стремя",
-    "темя",
-    "путь"
-];
+impl Declension {
+    /// The eleven nouns that take endings from more than one pattern.
+    ///
+    /// Ten of them end in `-мя` and grow a `-ен-`: in the singular before every
+    /// ending but the nominative and the accusative — `время`, `времени` — and
+    /// in the plural throughout, except the genitive, whose ending carries
+    /// the growth in itself — `времена`, `временам`, but `времён`. `путь`
+    /// is masculine and declines as a feminine noun in `ь` except in the
+    /// instrumental, where it says `путём`; it grows nothing.
+    pub const MIXED: &[&str] = &[
+        "бремя",
+        "время",
+        "вымя",
+        "знамя",
+        "имя",
+        "пламя",
+        "племя",
+        "семя",
+        "стремя",
+        "темя",
+        "путь"
+    ];
 
-/// The letters the growth of a mixed noun in `-мя` is written with.
-pub const GROWTH: &str = "ен";
+    /// The letters the growth of a mixed noun in `-мя` is written with.
+    pub const GROWTH: &str = "ен";
+}
 
 /// The endings only the adjectival declension writes.
 ///
@@ -118,7 +120,7 @@ pub fn on_glide(nominative: &str) -> bool {
 /// outright rather than asking here.
 #[must_use]
 pub fn of(nominative: &str, gender: Gender) -> Declension {
-    if MIXED.contains(&nominative) {
+    if Declension::MIXED.contains(&nominative) {
         return Declension::Mixed;
     }
     if ADJECTIVAL

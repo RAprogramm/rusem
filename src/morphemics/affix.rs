@@ -15,153 +15,170 @@
 //! segmenter never trusts a match on its own: a prefix comes off only when what
 //! remains still looks like a word, and the result is graded accordingly.
 
-/// Prefixes.
+/// The affix tables the segmenter cuts by.
 ///
-/// Each stands in the table once, and where one begins another — `недо` and
-/// `не` — the readers part them by length, not by which line comes first.
-pub const PREFIXES: &[&str] = &[
-    "противо",
-    "сверх",
-    "перед",
-    "около",
-    "между",
-    "через",
-    "полу",
-    "пере",
-    "пред",
-    "недо",
-    "анти",
-    "контр",
-    "супер",
-    "ультра",
-    "псевдо",
-    "квази",
-    "кибер",
-    "нео",
-    "обез",
-    "обес",
-    "разо",
-    "рас",
-    "раз",
-    "роз",
-    "рос",
-    "без",
-    "бес",
-    "воз",
-    "вос",
-    "низ",
-    "нис",
-    "под",
-    "над",
-    "при",
-    "про",
-    "пре",
-    "из",
-    "ис",
-    "вз",
-    "вс",
-    "до",
-    "за",
-    "на",
-    "не",
-    "об",
-    "от",
-    "по",
-    "со",
-    "вы",
-    "во",
-    "в",
-    "о",
-    "у",
-    "с"
-];
-
-/// Suffixes.
+/// A namespace for the tables below: the readers take a table as an argument,
+/// so one word for all five keeps the callers short.
 ///
-/// Each stands in the table once; as with the prefixes, the readers part
-/// `тельн` from `н` by measuring, so the table owes them no order.
-pub const SUFFIXES: &[&str] = &[
-    "оват",
-    "еват",
-    "тельн",
-    "енниц",
-    "енник",
-    "ательн",
-    "ительн",
-    "ость",
-    "есть",
-    "изм",
-    "ист",
-    "тель",
-    "еник",
-    "ниц",
-    "ник",
-    "чик",
-    "щик",
-    "щиц",
-    "чиц",
-    "льщик",
-    "ени",
-    "ани",
-    "ств",
-    "еств",
-    "изн",
-    "инк",
-    "ушк",
-    "юшк",
-    "ишк",
-    "оньк",
-    "еньк",
-    "отн",
-    "ищ",
-    "иц",
-    "ец",
-    "ач",
-    "аж",
-    "яг",
-    "як",
-    "ак",
-    "ик",
-    "ок",
-    "ек",
-    "лив",
-    "чив",
-    "аст",
-    "ов",
-    "ев",
-    "ск",
-    "ыва",
-    "ива",
-    "ова",
-    "ева",
-    "от",
-    "ну",
-    "н",
-    "к",
-    "л",
-    "и",
-    "а",
-    "я",
-    "е"
-];
-
-/// Inflectional endings, longest first.
+/// # Examples
 ///
-/// The table is a filter, not a parser: the ending of a form is found from its
-/// paradigm, and this list only rules out a tail that no Russian ending looks
-/// like.
-pub const ENDINGS: &[&str] = &[
-    "ыми", "ими", "ого", "его", "ому", "ему", "ами", "ями", "ешь", "ишь", "ете", "ите", "ает",
-    "ают", "ует", "уют", "ой", "ей", "ый", "ий", "ая", "яя", "ое", "ее", "ые", "ие", "ом", "ем",
-    "ам", "ям", "ах", "ях", "ов", "ев", "ут", "ют", "ат", "ят", "ет", "ит", "им", "ть", "ти",
-    "чь", "ла", "ло", "ли", "ья", "ью", "а", "я", "о", "е", "ы", "и", "у", "ю", "ь"
-];
+/// ```
+/// use rusem::morphemics::affix::{Affix, leading};
+///
+/// assert_eq!(leading(Affix::PREFIXES, "перестройка"), Some("пере"));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Affix;
 
-/// Postfixes, which stand after the ending.
-pub const POSTFIXES: &[&str] = &["ся", "сь", "то", "либо", "нибудь"];
+impl Affix {
+    /// Prefixes.
+    ///
+    /// Each stands in the table once, and where one begins another — `недо` and
+    /// `не` — the readers part them by length, not by which line comes first.
+    pub const PREFIXES: &[&str] = &[
+        "противо",
+        "сверх",
+        "перед",
+        "около",
+        "между",
+        "через",
+        "полу",
+        "пере",
+        "пред",
+        "недо",
+        "анти",
+        "контр",
+        "супер",
+        "ультра",
+        "псевдо",
+        "квази",
+        "кибер",
+        "нео",
+        "обез",
+        "обес",
+        "разо",
+        "рас",
+        "раз",
+        "роз",
+        "рос",
+        "без",
+        "бес",
+        "воз",
+        "вос",
+        "низ",
+        "нис",
+        "под",
+        "над",
+        "при",
+        "про",
+        "пре",
+        "из",
+        "ис",
+        "вз",
+        "вс",
+        "до",
+        "за",
+        "на",
+        "не",
+        "об",
+        "от",
+        "по",
+        "со",
+        "вы",
+        "во",
+        "в",
+        "о",
+        "у",
+        "с"
+    ];
 
-/// Linking vowels, which join two roots in a compound.
-pub const INTERFIXES: &[&str] = &["о", "е"];
+    /// Suffixes.
+    ///
+    /// Each stands in the table once; as with the prefixes, the readers part
+    /// `тельн` from `н` by measuring, so the table owes them no order.
+    pub const SUFFIXES: &[&str] = &[
+        "оват",
+        "еват",
+        "тельн",
+        "енниц",
+        "енник",
+        "ательн",
+        "ительн",
+        "ость",
+        "есть",
+        "изм",
+        "ист",
+        "тель",
+        "еник",
+        "ниц",
+        "ник",
+        "чик",
+        "щик",
+        "щиц",
+        "чиц",
+        "льщик",
+        "ени",
+        "ани",
+        "ств",
+        "еств",
+        "изн",
+        "инк",
+        "ушк",
+        "юшк",
+        "ишк",
+        "оньк",
+        "еньк",
+        "отн",
+        "ищ",
+        "иц",
+        "ец",
+        "ач",
+        "аж",
+        "яг",
+        "як",
+        "ак",
+        "ик",
+        "ок",
+        "ек",
+        "лив",
+        "чив",
+        "аст",
+        "ов",
+        "ев",
+        "ск",
+        "ыва",
+        "ива",
+        "ова",
+        "ева",
+        "от",
+        "ну",
+        "н",
+        "к",
+        "л",
+        "и",
+        "а",
+        "я",
+        "е"
+    ];
+
+    /// Inflectional endings, longest first.
+    ///
+    /// The table is a filter, not a parser: the ending of a form is found from
+    /// its paradigm, and this list only rules out a tail that no Russian
+    /// ending looks like.
+    pub const ENDINGS: &[&str] = &[
+        "ыми", "ими", "ого", "его", "ому", "ему", "ами", "ями", "ешь", "ишь", "ете", "ите", "ает",
+        "ают", "ует", "уют", "ой", "ей", "ый", "ий", "ая", "яя", "ое", "ее", "ые", "ие", "ом",
+        "ем", "ам", "ям", "ах", "ях", "ов", "ев", "ут", "ют", "ат", "ят", "ет", "ит", "им", "ть",
+        "ти", "чь", "ла", "ло", "ли", "ья", "ью", "а", "я", "о", "е", "ы", "и", "у", "ю", "ь"
+    ];
+
+    /// Postfixes, which stand after the ending.
+    pub const POSTFIXES: &[&str] = &["ся", "сь", "то", "либо", "нибудь"];
+
+    /// Linking vowels, which join two roots in a compound.
+    pub const INTERFIXES: &[&str] = &["о", "е"];
+}
 
 /// Reports whether a stretch of a word holds a vowel.
 ///
@@ -238,7 +255,13 @@ mod tests {
 
     #[test]
     fn no_table_lists_an_entry_twice() {
-        for table in [PREFIXES, SUFFIXES, ENDINGS, POSTFIXES, INTERFIXES] {
+        for table in [
+            Affix::PREFIXES,
+            Affix::SUFFIXES,
+            Affix::ENDINGS,
+            Affix::POSTFIXES,
+            Affix::INTERFIXES
+        ] {
             let mut seen = std::collections::HashSet::new();
             for one in table {
                 assert!(seen.insert(one), "{one} is listed twice");
@@ -248,19 +271,19 @@ mod tests {
 
     #[test]
     fn longest_prefix_wins() {
-        assert_eq!(leading(PREFIXES, "перестройка"), Some("пере"));
-        assert_eq!(leading(PREFIXES, "недоделка"), Some("недо"));
+        assert_eq!(leading(Affix::PREFIXES, "перестройка"), Some("пере"));
+        assert_eq!(leading(Affix::PREFIXES, "недоделка"), Some("недо"));
     }
 
     #[test]
     fn longest_suffix_wins() {
-        assert_eq!(trailing(SUFFIXES, "читатель"), Some("тель"));
-        assert_eq!(trailing(SUFFIXES, "смелость"), Some("ость"));
+        assert_eq!(trailing(Affix::SUFFIXES, "читатель"), Some("тель"));
+        assert_eq!(trailing(Affix::SUFFIXES, "смелость"), Some("ость"));
     }
 
     #[test]
     fn a_word_without_a_listed_affix_matches_nothing() {
-        assert_eq!(leading(PREFIXES, "лес"), None);
+        assert_eq!(leading(Affix::PREFIXES, "лес"), None);
     }
 
     #[test]

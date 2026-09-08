@@ -24,8 +24,24 @@ pub mod particles;
 
 use crate::rules::Citation;
 
-/// Where the paragraph is written.
-pub const CITES: Citation = Citation::whole(86);
+/// § 86 as a rule.
+///
+/// Holds where the paragraph is written and the letter it joins with.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::hyphen_compound::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 86);
+/// assert_eq!(Rule::HYPHEN, '-');
+/// ```
+pub struct Rule;
 
-/// The letter the paragraph joins with.
-pub const HYPHEN: char = '-';
+impl Rule {
+    /// Where the paragraph is written.
+    pub const CITES: Citation = Citation::whole(86);
+
+    /// The letter the paragraph joins with.
+    pub const HYPHEN: char = '-';
+}

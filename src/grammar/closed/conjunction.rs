@@ -25,115 +25,136 @@
 pub mod coordination;
 pub mod subordination;
 
-/// The conjunctions that join equals.
-///
-/// `да` is here in its joining sense — `хлеб да соль` — and in its opposing
-/// one, `мал да удал`. Both are coordinating, so the list does not part them.
-pub const COORDINATING: &[&str] = &[
-    "а",
-    "да",
-    "же",
-    "зато",
-    "и",
-    "либо",
-    "ни",
-    "но",
-    "однако",
-    "или",
-    "притом",
-    "причём",
-    "также",
-    "тоже"
-];
+use super::asking::Asking;
 
-/// The conjunctions that hang a clause under another.
-pub const SUBORDINATING: &[&str] = &[
-    "будто",
-    "буде",
-    "дабы",
-    "едва",
-    "ежели",
-    "если",
-    "ибо",
-    "кабы",
-    "как",
-    "когда",
-    "коли",
-    "коль",
-    "лишь",
-    "нежели",
-    "пока",
-    "покуда",
-    "поскольку",
-    "пускай",
-    "пусть",
-    "раз",
-    "словно",
-    "точно",
-    "хоть",
-    "хотя",
-    "чем",
-    "что",
-    "чтоб",
-    "чтобы",
-    "чуть"
-];
-
-/// The conjunctions that open a clause and nothing else.
+/// The conjunctions.
 ///
-/// A subset of the subordinating ones, and the one a comma rule wants: `и` may
-/// open a clause too, but a comma before it turns on other things. These
-/// always take one.
-pub const CLAUSE_OPENING: &[&str] = &[
-    "будто",
-    "дабы",
-    "ежели",
-    "если",
-    "ибо",
-    "когда",
-    "нежели",
-    "поскольку",
-    "словно",
-    "хотя",
-    "чем",
-    "что",
-    "чтоб",
-    "чтобы"
-];
-
-/// The subordinating conjunctions written in more than one word.
+/// Holds the words that join equals and the ones that hang a clause under
+/// another, with the two subsets a comma rule asks for.
 ///
-/// They matter to a comma rule because the comma goes before the whole of
-/// one: `она изменилась, потому что устала` sets the comma before `потому`
-/// and never between `потому` and `что`. A rule that reads `что` alone would
-/// ask for a second comma that Russian does not take.
-pub const COMPOUND: &[&str] = &[
-    "благодаря тому что",
-    "в связи с тем что",
-    "в силу того что",
-    "в то время как",
-    "ввиду того что",
-    "вследствие того что",
-    "для того чтобы",
-    "до того как",
-    "затем чтобы",
-    "как будто",
-    "как только",
-    "лишь только",
-    "несмотря на то что",
-    "оттого что",
-    "перед тем как",
-    "по мере того как",
-    "после того как",
-    "потому что",
-    "прежде чем",
-    "с тем чтобы",
-    "с тех пор как",
-    "так как",
-    "так что",
-    "тем более что",
-    "тогда как"
-];
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::conjunction::Conjunction;
+///
+/// assert!(Conjunction::COORDINATING.contains(&"и"));
+/// assert!(Conjunction::SUBORDINATING.contains(&"что"));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Conjunction;
+
+impl Conjunction {
+    /// The conjunctions that join equals.
+    ///
+    /// `да` is here in its joining sense — `хлеб да соль` — and in its
+    /// opposing one, `мал да удал`. Both are coordinating, so the list does
+    /// not part them.
+    pub const COORDINATING: &[&str] = &[
+        "а",
+        "да",
+        "же",
+        "зато",
+        "и",
+        "либо",
+        "ни",
+        "но",
+        "однако",
+        "или",
+        "притом",
+        "причём",
+        "также",
+        "тоже"
+    ];
+
+    /// The conjunctions that hang a clause under another.
+    pub const SUBORDINATING: &[&str] = &[
+        "будто",
+        "буде",
+        "дабы",
+        "едва",
+        "ежели",
+        "если",
+        "ибо",
+        "кабы",
+        "как",
+        "когда",
+        "коли",
+        "коль",
+        "лишь",
+        "нежели",
+        "пока",
+        "покуда",
+        "поскольку",
+        "пускай",
+        "пусть",
+        "раз",
+        "словно",
+        "точно",
+        "хоть",
+        "хотя",
+        "чем",
+        "что",
+        "чтоб",
+        "чтобы",
+        "чуть"
+    ];
+
+    /// The conjunctions that open a clause and nothing else.
+    ///
+    /// A subset of the subordinating ones, and the one a comma rule wants:
+    /// `и` may open a clause too, but a comma before it turns on other
+    /// things. These always take one.
+    pub const CLAUSE_OPENING: &[&str] = &[
+        "будто",
+        "дабы",
+        "ежели",
+        "если",
+        "ибо",
+        "когда",
+        "нежели",
+        "поскольку",
+        "словно",
+        "хотя",
+        "чем",
+        "что",
+        "чтоб",
+        "чтобы"
+    ];
+
+    /// The subordinating conjunctions written in more than one word.
+    ///
+    /// They matter to a comma rule because the comma goes before the whole
+    /// of one: `она изменилась, потому что устала` sets the comma before
+    /// `потому` and never between `потому` and `что`. A rule that reads `что`
+    /// alone would ask for a second comma that Russian does not take.
+    pub const COMPOUND: &[&str] = &[
+        "благодаря тому что",
+        "в связи с тем что",
+        "в силу того что",
+        "в то время как",
+        "ввиду того что",
+        "вследствие того что",
+        "для того чтобы",
+        "до того как",
+        "затем чтобы",
+        "как будто",
+        "как только",
+        "лишь только",
+        "несмотря на то что",
+        "оттого что",
+        "перед тем как",
+        "по мере того как",
+        "после того как",
+        "потому что",
+        "прежде чем",
+        "с тем чтобы",
+        "с тех пор как",
+        "так как",
+        "так что",
+        "тем более что",
+        "тогда как"
+    ];
+}
 
 /// Reports whether a word closes a compound conjunction begun by the one
 /// before it.
@@ -154,7 +175,7 @@ pub const COMPOUND: &[&str] = &[
 pub fn closes_a_compound(before: &str, written: &str) -> bool {
     let tail = format!("{} {}", before.to_lowercase(), written.to_lowercase());
 
-    COMPOUND
+    Conjunction::COMPOUND
         .iter()
         .any(|held| *held == tail || held.ends_with(&format!(" {tail}")))
 }
@@ -185,7 +206,7 @@ pub fn opens_a_subordinate_clause(written: &str) -> bool {
     subordinates(&held)
         || crate::grammar::closed::adverb::relates(&held)
         || crate::grammar::closed::pronoun::relates(&held)
-        || crate::grammar::closed::pronoun::ASKING.contains(&held.as_str())
+        || Asking::PRONOUNS.contains(&held.as_str())
 }
 
 /// Reports whether a written word joins equals.
@@ -201,19 +222,19 @@ pub fn opens_a_subordinate_clause(written: &str) -> bool {
 /// ```
 #[must_use]
 pub fn coordinates(written: &str) -> bool {
-    COORDINATING.contains(&written.to_lowercase().as_str())
+    Conjunction::COORDINATING.contains(&written.to_lowercase().as_str())
 }
 
 /// Reports whether a written word hangs a clause under another.
 #[must_use]
 pub fn subordinates(written: &str) -> bool {
-    SUBORDINATING.contains(&written.to_lowercase().as_str())
+    Conjunction::SUBORDINATING.contains(&written.to_lowercase().as_str())
 }
 
 /// Reports whether a written word always opens a clause.
 #[must_use]
 pub fn opens_a_clause(written: &str) -> bool {
-    CLAUSE_OPENING.contains(&written.to_lowercase().as_str())
+    Conjunction::CLAUSE_OPENING.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -243,7 +264,7 @@ mod tests {
 
     #[test]
     fn every_clause_opener_is_a_subordinator() {
-        for held in CLAUSE_OPENING {
+        for held in Conjunction::CLAUSE_OPENING {
             assert!(
                 subordinates(held),
                 "{held} opens a clause and subordinates nothing"

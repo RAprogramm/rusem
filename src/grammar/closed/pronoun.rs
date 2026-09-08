@@ -29,87 +29,7 @@
 
 pub mod forms;
 
-pub use self::forms::{
-    ASKING_FORMS, DEMONSTRATIVE_FORMS, POSSESSIVE_FORMS, asks_in_any_form, points_in_any_form,
-    possesses_in_any_form
-};
-
-/// The personal pronouns, in every form they take.
-///
-/// Listed whole because they suppleate: `я` and `меня` share no letters, and
-/// nothing but a list relates them.
-pub const PERSONAL: &[&str] = &[
-    "вам",
-    "вами",
-    "вас",
-    "вы",
-    "его",
-    "ей",
-    "ему",
-    "ею",
-    "её",
-    "им",
-    "ими",
-    "их",
-    "меня",
-    "мне",
-    "мной",
-    "мною",
-    "мы",
-    "нам",
-    "нами",
-    "нас",
-    "него",
-    "неё",
-    "ней",
-    "нем",
-    "нему",
-    "нею",
-    "ним",
-    "нём",
-    "ними",
-    "них",
-    "он",
-    "она",
-    "они",
-    "оно",
-    "тебе",
-    "тебя",
-    "тобой",
-    "тобою",
-    "ты",
-    "я"
-];
-
-/// The reflexive pronoun, which has no nominative.
-///
-/// One word, and the class holds nothing else.
-pub const REFLEXIVE: &[&str] = &["себе", "себя", "собой", "собою"];
-
-/// The possessive pronouns, in dictionary form.
-///
-/// `его`, `её` and `их` are here and among the personal ones too: the same
-/// spelling is the genitive of a personal pronoun and a possessive that never
-/// declines. Only what it stands beside tells them apart.
-pub const POSSESSIVE: &[&str] = &["ваш", "его", "её", "их", "мой", "наш", "свой", "твой"];
-
-/// The demonstrative pronouns.
-pub const DEMONSTRATIVE: &[&str] = &["оный", "сей", "столько", "таков", "такой", "тот", "этот"];
-
-/// The definitive pronouns.
-pub const DEFINITIVE: &[&str] = &[
-    "весь",
-    "всякий",
-    "всяческий",
-    "другой",
-    "иной",
-    "каждый",
-    "любой",
-    "сам",
-    "самый",
-    "целый"
-];
-
+pub use self::forms::{Forms, asks_in_any_form, points_in_any_form, possesses_in_any_form};
 /// The pronouns that ask, and the same ones that hang a clause.
 ///
 /// Interrogative and relative are two classes of one list: `какой` asks in
@@ -119,7 +39,7 @@ pub const DEFINITIVE: &[&str] = &[
 /// Stated in [`asking`], which is where the words that ask live: the negative
 /// and the indefinite pronouns are built out of them, and building them in two
 /// places would let the two disagree.
-pub use super::asking::{self, PRONOUNS as ASKING};
+pub use super::asking::{self, Asking};
 
 /// The pronouns carrying `не` whose class the writing does not settle.
 ///
@@ -165,14 +85,93 @@ pub enum Class {
     Indefinite
 }
 
+impl Class {
+    /// The personal pronouns, in every form they take.
+    ///
+    /// Listed whole because they suppleate: `я` and `меня` share no letters,
+    /// and nothing but a list relates them.
+    pub const PERSONAL: &[&str] = &[
+        "вам",
+        "вами",
+        "вас",
+        "вы",
+        "его",
+        "ей",
+        "ему",
+        "ею",
+        "её",
+        "им",
+        "ими",
+        "их",
+        "меня",
+        "мне",
+        "мной",
+        "мною",
+        "мы",
+        "нам",
+        "нами",
+        "нас",
+        "него",
+        "неё",
+        "ней",
+        "нем",
+        "нему",
+        "нею",
+        "ним",
+        "нём",
+        "ними",
+        "них",
+        "он",
+        "она",
+        "они",
+        "оно",
+        "тебе",
+        "тебя",
+        "тобой",
+        "тобою",
+        "ты",
+        "я"
+    ];
+
+    /// The reflexive pronoun, which has no nominative.
+    ///
+    /// One word, and the class holds nothing else.
+    pub const REFLEXIVE: &[&str] = &["себе", "себя", "собой", "собою"];
+
+    /// The possessive pronouns, in dictionary form.
+    ///
+    /// `его`, `её` and `их` are here and among the personal ones too: the same
+    /// spelling is the genitive of a personal pronoun and a possessive that
+    /// never declines. Only what it stands beside tells them apart.
+    pub const POSSESSIVE: &[&str] = &["ваш", "его", "её", "их", "мой", "наш", "свой", "твой"];
+
+    /// The demonstrative pronouns.
+    pub const DEMONSTRATIVE: &[&str] =
+        &["оный", "сей", "столько", "таков", "такой", "тот", "этот"];
+
+    /// The definitive pronouns.
+    pub const DEFINITIVE: &[&str] = &[
+        "весь",
+        "всякий",
+        "всяческий",
+        "другой",
+        "иной",
+        "каждый",
+        "любой",
+        "сам",
+        "самый",
+        "целый"
+    ];
+}
+
 /// Every class, with the words in it.
 const CLASSES: &[(Class, &[&str])] = &[
-    (Class::Personal, PERSONAL),
-    (Class::Reflexive, REFLEXIVE),
-    (Class::Possessive, POSSESSIVE),
-    (Class::Demonstrative, DEMONSTRATIVE),
-    (Class::Definitive, DEFINITIVE),
-    (Class::Asking, ASKING)
+    (Class::Personal, Class::PERSONAL),
+    (Class::Reflexive, Class::REFLEXIVE),
+    (Class::Possessive, Class::POSSESSIVE),
+    (Class::Demonstrative, Class::DEMONSTRATIVE),
+    (Class::Definitive, Class::DEFINITIVE),
+    (Class::Asking, Asking::PRONOUNS)
 ];
 
 /// The classes a written word belongs to.
@@ -345,7 +344,7 @@ mod tests {
     #[test]
     fn the_reflexive_class_holds_one_word_in_its_forms() {
         assert!(
-            REFLEXIVE
+            Class::REFLEXIVE
                 .iter()
                 .all(|held| held.starts_with("себ") || held.starts_with("соб"))
         );

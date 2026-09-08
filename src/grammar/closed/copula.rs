@@ -15,33 +15,51 @@
 //! nominative in the past: `он был врач` is old but not wrong. So it is named
 //! apart, and a gate refusing a nominative must not refuse it over `быть`.
 
-/// The copulas that require the instrumental.
+/// The verbs that join.
 ///
-/// `остаться`, `казаться`, `работать` and `служить` are not here. They take a
-/// place as readily as a predicate — `остался дома`, `работает дома` — and a
-/// gate cannot tell the two apart by case alone.
-pub const JOINING: &[&str] = &[
-    "делаться",
-    "оказаться",
-    "оказываться",
-    "сделаться",
-    "слыть",
-    "становиться",
-    "стать",
-    "считаться",
-    "числиться",
-    "являться"
-];
+/// Holds the copulas that require the instrumental, the verb of being, and
+/// its future and past forms.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::copula::Copula;
+///
+/// assert!(Copula::JOINING.contains(&"стать"));
+/// assert!(Copula::BEING.contains(&"быть"));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Copula;
 
-/// The verb of being, which joins without requiring a case.
-pub const BEING: &[&str] = &["быть", "бывать"];
+impl Copula {
+    /// The copulas that require the instrumental.
+    ///
+    /// `остаться`, `казаться`, `работать` and `служить` are not here. They
+    /// take a place as readily as a predicate — `остался дома`, `работает
+    /// дома` — and a gate cannot tell the two apart by case alone.
+    pub const JOINING: &[&str] = &[
+        "делаться",
+        "оказаться",
+        "оказываться",
+        "сделаться",
+        "слыть",
+        "становиться",
+        "стать",
+        "считаться",
+        "числиться",
+        "являться"
+    ];
 
-/// The forms `быть` takes in the future, which build the analytic future of
-/// every imperfective verb: `буду читать`.
-pub const WILL: &[&str] = &["буду", "будем", "будет", "будете", "будешь", "будут"];
+    /// The verb of being, which joins without requiring a case.
+    pub const BEING: &[&str] = &["быть", "бывать"];
 
-/// The forms `быть` takes in the past.
-pub const WAS: &[&str] = &["был", "была", "были", "было"];
+    /// The forms `быть` takes in the future, which build the analytic future
+    /// of every imperfective verb: `буду читать`.
+    pub const WILL: &[&str] = &["буду", "будем", "будет", "будете", "будешь", "будут"];
+
+    /// The forms `быть` takes in the past.
+    pub const WAS: &[&str] = &["был", "была", "были", "было"];
+}
 
 /// Reports whether a written lemma joins a subject to what it is said to be.
 ///
@@ -58,7 +76,7 @@ pub const WAS: &[&str] = &["был", "была", "были", "было"];
 pub fn joins(lemma: &str) -> bool {
     let held = lemma.to_lowercase();
 
-    JOINING.contains(&held.as_str()) || BEING.contains(&held.as_str())
+    Copula::JOINING.contains(&held.as_str()) || Copula::BEING.contains(&held.as_str())
 }
 
 /// Reports whether a written lemma requires the instrumental after it.
@@ -67,7 +85,7 @@ pub fn joins(lemma: &str) -> bool {
 /// and drops out in the present.
 #[must_use]
 pub fn requires_the_instrumental(lemma: &str) -> bool {
-    JOINING.contains(&lemma.to_lowercase().as_str())
+    Copula::JOINING.contains(&lemma.to_lowercase().as_str())
 }
 
 /// Reports whether a written form is a form of `быть` in the future.
@@ -76,13 +94,13 @@ pub fn requires_the_instrumental(lemma: &str) -> bool {
 /// in a predicate must read the pair as one.
 #[must_use]
 pub fn is_future_of_being(written: &str) -> bool {
-    WILL.contains(&written.to_lowercase().as_str())
+    Copula::WILL.contains(&written.to_lowercase().as_str())
 }
 
 /// Reports whether a written form is a form of `быть` in the past.
 #[must_use]
 pub fn is_past_of_being(written: &str) -> bool {
-    WAS.contains(&written.to_lowercase().as_str())
+    Copula::WAS.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -91,7 +109,7 @@ mod tests {
 
     #[test]
     fn every_list_is_sorted_and_holds_no_word_twice() {
-        for class in [JOINING, BEING, WILL, WAS] {
+        for class in [Copula::JOINING, Copula::BEING, Copula::WILL, Copula::WAS] {
             let mut held = class.to_vec();
             held.sort_unstable();
             held.dedup();
@@ -110,10 +128,10 @@ mod tests {
 
     #[test]
     fn every_copula_but_being_requires_the_instrumental() {
-        for held in JOINING {
+        for held in Copula::JOINING {
             assert!(requires_the_instrumental(held), "{held}");
         }
-        for held in BEING {
+        for held in Copula::BEING {
             assert!(
                 !requires_the_instrumental(held),
                 "{held} admits the nominative"
@@ -133,11 +151,11 @@ mod tests {
 
     #[test]
     fn the_future_has_a_form_for_every_person_and_number() {
-        assert_eq!(WILL.len(), 6);
+        assert_eq!(Copula::WILL.len(), 6);
     }
 
     #[test]
     fn the_past_has_a_form_for_every_gender_and_the_plural() {
-        assert_eq!(WAS.len(), 4);
+        assert_eq!(Copula::WAS.len(), 4);
     }
 }

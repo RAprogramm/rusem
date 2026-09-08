@@ -29,11 +29,11 @@ macro_rules! off_the_letters {
 
         impl Rule for $name {
             fn cites(&self) -> Citation {
-                $module::CITES
+                $module::Rule::CITES
             }
 
             fn scope(&self) -> Scope {
-                $module::SCOPE
+                $module::Rule::SCOPE
             }
 
             fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -52,11 +52,11 @@ pub struct NeTogether;
 
 impl Rule for NeTogether {
     fn cites(&self) -> Citation {
-        ne_together::pronouns::CITES
+        ne_together::pronouns::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        ne_together::pronouns::SCOPE
+        ne_together::pronouns::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -70,11 +70,11 @@ pub struct NiTogether;
 
 impl Rule for NiTogether {
     fn cites(&self) -> Citation {
-        ni_together::pronouns::CITES
+        ni_together::pronouns::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        ni_together::pronouns::SCOPE
+        ni_together::pronouns::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -88,11 +88,11 @@ pub struct NiTogetherAdverbs;
 
 impl Rule for NiTogetherAdverbs {
     fn cites(&self) -> Citation {
-        ni_together::adverbs::CITES
+        ni_together::adverbs::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        ni_together::adverbs::SCOPE
+        ni_together::adverbs::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -106,11 +106,11 @@ pub struct TsVowels;
 
 impl Rule for TsVowels {
     fn cites(&self) -> Citation {
-        ts_vowels::CITES
+        ts_vowels::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        ts_vowels::SCOPE
+        ts_vowels::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -124,11 +124,11 @@ pub struct UnstressedO;
 
 impl Rule for UnstressedO {
     fn cites(&self) -> Citation {
-        unstressed_o::CITES
+        unstressed_o::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        unstressed_o::SCOPE
+        unstressed_o::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -146,11 +146,11 @@ pub struct PrefixBeforeI;
 
 impl Rule for PrefixBeforeI {
     fn cites(&self) -> Citation {
-        prefix_before_i::CITES
+        prefix_before_i::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        prefix_before_i::SCOPE
+        prefix_before_i::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -164,11 +164,11 @@ pub struct UnstressedEnding;
 
 impl Rule for UnstressedEnding {
     fn cites(&self) -> Citation {
-        unstressed_ending::CITES
+        unstressed_ending::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        unstressed_ending::SCOPE
+        unstressed_ending::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -186,11 +186,11 @@ pub struct SoftSign;
 
 impl Rule for SoftSign {
     fn cites(&self) -> Citation {
-        soft_sign::CITES
+        soft_sign::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        scope::ANY
+        scope::Scope::ANY
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -204,11 +204,11 @@ pub struct InterjectionComma;
 
 impl Rule for InterjectionComma {
     fn cites(&self) -> Citation {
-        interjection_comma::CITES
+        interjection_comma::Rule::CITES
     }
 
     fn scope(&self) -> Scope {
-        interjection_comma::SCOPE
+        interjection_comma::Rule::SCOPE
     }
 
     fn found(&self, facts: &Facts<'_>) -> Findings {
@@ -216,25 +216,42 @@ impl Rule for InterjectionComma {
     }
 }
 
-/// Every paragraph the engine has, in the order they stand in the code.
+/// Every paragraph the engine has, as rules the checker can ask.
 ///
-/// A paragraph is written when the engine holds the facts to ask it. One that
-/// is written and not here is one nothing will ever ask, which is the mistake
-/// this list exists to make impossible.
-pub const RULES: &[&dyn Rule] = &[
-    &SibilantVowels,
-    &TsVowels,
-    &UnstressedO,
-    &PrefixBeforeI,
-    &UnstressedEnding,
-    &SoftSign,
-    &DoubledInterjection,
-    &HyphenedParticle,
-    &NeTogether,
-    &NiTogether,
-    &NiTogetherAdverbs,
-    &InterjectionComma
-];
+/// A namespace for the list below: one paragraph written and not listed is one
+/// nothing will ever ask.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::written::Rules;
+///
+/// assert!(!Rules::RULES.is_empty());
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Rules;
+
+impl Rules {
+    /// Every paragraph the engine has, in the order they stand in the code.
+    ///
+    /// A paragraph is written when the engine holds the facts to ask it. One
+    /// that is written and not here is one nothing will ever ask, which is
+    /// the mistake this list exists to make impossible.
+    pub const RULES: &[&dyn Rule] = &[
+        &SibilantVowels,
+        &TsVowels,
+        &UnstressedO,
+        &PrefixBeforeI,
+        &UnstressedEnding,
+        &SoftSign,
+        &DoubledInterjection,
+        &HyphenedParticle,
+        &NeTogether,
+        &NiTogether,
+        &NiTogetherAdverbs,
+        &InterjectionComma
+    ];
+}
 
 #[cfg(test)]
 mod tests {
@@ -299,28 +316,28 @@ mod tests {
     #[test]
     fn every_paragraph_written_is_in_the_list() {
         let stated = [
-            sibilant_vowels::CITES,
-            ts_vowels::CITES,
-            unstressed_o::CITES,
-            prefix_before_i::CITES,
-            unstressed_ending::CITES,
-            soft_sign::CITES,
-            soft_sign::end_of_word::CITES,
-            soft_sign::before_hard::CITES,
-            soft_sign::before_hardening::CITES,
-            soft_sign::before_l::CITES,
-            soft_sign::not_before_soft::CITES,
-            interjections::CITES,
-            particles::CITES,
-            ne_together::pronouns::CITES,
-            ni_together::pronouns::CITES,
-            ni_together::adverbs::CITES,
-            interjection_comma::CITES
+            sibilant_vowels::Rule::CITES,
+            ts_vowels::Rule::CITES,
+            unstressed_o::Rule::CITES,
+            prefix_before_i::Rule::CITES,
+            unstressed_ending::Rule::CITES,
+            soft_sign::Rule::CITES,
+            soft_sign::end_of_word::Rule::CITES,
+            soft_sign::before_hard::Rule::CITES,
+            soft_sign::before_hardening::Rule::CITES,
+            soft_sign::before_l::Rule::CITES,
+            soft_sign::not_before_soft::Rule::CITES,
+            interjections::Rule::CITES,
+            particles::Rule::CITES,
+            ne_together::pronouns::Rule::CITES,
+            ni_together::pronouns::Rule::CITES,
+            ni_together::adverbs::Rule::CITES,
+            interjection_comma::Rule::CITES
         ];
 
         for held in stated {
             assert!(
-                RULES
+                Rules::RULES
                     .iter()
                     .any(|rule| rule.cites().paragraph == held.paragraph),
                 "§ {} is written and nothing will ever ask it",
@@ -331,7 +348,7 @@ mod tests {
 
     #[test]
     fn no_paragraph_is_listed_twice() {
-        let mut cited: Vec<(u16, u16)> = RULES
+        let mut cited: Vec<(u16, u16)> = Rules::RULES
             .iter()
             .map(|rule| {
                 let held = rule.cites();
@@ -348,14 +365,11 @@ mod tests {
 
     #[test]
     fn every_rule_cites_a_paragraph_of_the_code() {
-        for rule in RULES {
+        for rule in Rules::RULES {
             let held = rule.cites();
 
             assert!(held.is_stated(), "{held} cites nothing");
-            assert!(
-                held.paragraph <= crate::rules::citation::LAST,
-                "{held} is past the end"
-            );
+            assert!(held.paragraph <= Citation::LAST, "{held} is past the end");
         }
     }
 
@@ -375,7 +389,7 @@ mod tests {
         let stress = Stressed::unknown();
         let held = facts("вода", None, &stress);
 
-        for rule in RULES {
+        for rule in Rules::RULES {
             let cited = rule.cites();
 
             assert!(asked(*rule, &held).is_empty(), "{cited} fired on вода");
@@ -520,7 +534,7 @@ mod tests {
         ] {
             let held = facts(written, Some("дом"), &stress);
 
-            for rule in RULES {
+            for rule in Rules::RULES {
                 let _ = asked(*rule, &held);
             }
         }

@@ -29,11 +29,27 @@ use crate::{
     rules::{Citation, Findings, Found, Scope, scope}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::point(86, 3);
+/// § 86, пункт 3, as a rule.
+///
+/// Holds where the point is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::hyphen_compound::particles::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 86);
+/// assert_eq!(Rule::CITES.point, 3);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::point(86, 3);
+
+    /// What this rule is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// The particles the paragraph writes in front.
 const LEADING: &[&str] = &["кое", "кой"];
@@ -84,7 +100,7 @@ pub fn found(written: &str) -> Findings {
     }
 
     held.push(Found::new(
-        CITES,
+        Rule::CITES,
         first.chars().count(),
         SAYS,
         std::format!("{first}-{rest}")
@@ -98,8 +114,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_and_its_point_are_cited() {
-        assert_eq!(CITES.paragraph, 86);
-        assert_eq!(CITES.point, 3);
+        assert_eq!(Rule::CITES.paragraph, 86);
+        assert_eq!(Rule::CITES.point, 3);
     }
 
     #[test]
@@ -124,7 +140,7 @@ mod tests {
     fn a_particle_written_off_its_word_is_found_and_spelled_with_the_hyphen() {
         let one = found("кто то");
         assert_eq!(one.len(), 1);
-        assert_eq!(one[0].cites, CITES);
+        assert_eq!(one[0].cites, Rule::CITES);
         assert_eq!(one[0].instead, "кто-то");
 
         assert_eq!(found("кое что")[0].instead, "кое-что");

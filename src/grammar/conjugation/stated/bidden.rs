@@ -99,7 +99,7 @@ fn eleventh(infinitive: &str, index: VerbIndex) -> Option<(String, String)> {
 fn closed(infinitive: &str, held: String, index: VerbIndex) -> (String, String) {
     if matches!(index.circled.imperative_split, Some(Reach::Whole)) {
         let one = held.clone() + Ending::Vowel.written();
-        let many = held + Ending::SoftSign.written() + imperative::PLURAL;
+        let many = held + Ending::SoftSign.written() + Ending::PLURAL;
         return (one, many);
     }
 
@@ -123,7 +123,7 @@ fn closed(infinitive: &str, held: String, index: VerbIndex) -> (String, String) 
 /// The plural beside the singular, which is the singular with `-те` after
 /// it.
 fn pair(one: String) -> (String, String) {
-    let many = one.clone() + imperative::PLURAL;
+    let many = one.clone() + Ending::PLURAL;
     (one, many)
 }
 

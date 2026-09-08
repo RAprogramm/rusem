@@ -31,24 +31,40 @@ use crate::{
     rules::{Citation, Findings, Found, Scope}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::point(86, 2);
+/// § 86, пункт 2, as a rule.
+///
+/// Holds where the point is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::hyphen_compound::interjections::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 86);
+/// assert_eq!(Rule::CITES.point, 2);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-///
-/// Interjections, because that is what the paragraph is about.
-///
-/// The repetition alone does not make one: `мама`, `папа` and `дядя` say a
-/// piece of themselves twice and are nouns, written solid. Reading the class
-/// off the repetition would hyphenate all three, so the class is asked for
-/// instead — and the engine now has it, because the word states what it is
-/// and the form comes from its own paradigm.
-pub const SCOPE: Scope = Scope {
-    parts:   &[PartOfSpeech::Interjection],
-    cases:   &[],
-    numbers: &[],
-    needs:   crate::rules::scope::NOTHING
-};
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::point(86, 2);
+
+    /// What this rule is about.
+    ///
+    /// Interjections, because that is what the paragraph is about.
+    ///
+    /// The repetition alone does not make one: `мама`, `папа` and `дядя` say a
+    /// piece of themselves twice and are nouns, written solid. Reading the
+    /// class off the repetition would hyphenate all three, so the class is
+    /// asked for instead — and the engine now has it, because the word
+    /// states what it is and the form comes from its own paradigm.
+    pub const SCOPE: Scope = Scope {
+        parts:   &[PartOfSpeech::Interjection],
+        cases:   &[],
+        numbers: &[],
+        needs:   crate::rules::scope::Needs::NOTHING
+    };
+}
 
 /// The fewest characters a repeated piece may have.
 ///
@@ -149,7 +165,7 @@ pub fn found(written: &str) -> Findings {
         return held;
     };
 
-    held.push(Found::new(CITES, 0, SAYS, parted));
+    held.push(Found::new(Rule::CITES, 0, SAYS, parted));
     held
 }
 
@@ -199,9 +215,9 @@ mod tests {
 
     #[test]
     fn the_paragraph_and_its_point_are_cited() {
-        assert_eq!(CITES.paragraph, 86);
-        assert_eq!(CITES.point, 2);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 86);
+        assert_eq!(Rule::CITES.point, 2);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]
@@ -239,7 +255,7 @@ mod tests {
     fn a_repeat_written_solid_is_found_and_spelled_with_hyphens() {
         let one = found("хахаха");
         assert_eq!(one.len(), 1);
-        assert_eq!(one[0].cites, CITES);
+        assert_eq!(one[0].cites, Rule::CITES);
         assert_eq!(one[0].instead, "ха-ха-ха");
 
         let two = found("цыпцып");

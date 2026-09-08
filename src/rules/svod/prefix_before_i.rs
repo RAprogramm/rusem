@@ -21,19 +21,34 @@ use crate::{
     rules::{Citation, Findings, Found, Parts, Scope, found::spelled, scope}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::whole(7);
+/// § 7 as a rule.
+///
+/// Holds where the paragraph is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::prefix_before_i::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 7);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-pub const SCOPE: Scope = Scope {
-    parts:   &[],
-    cases:   &[],
-    numbers: &[],
-    needs:   scope::Needs {
-        stress: false,
-        parts:  true
-    }
-};
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::whole(7);
+
+    /// What this rule is about.
+    pub const SCOPE: Scope = Scope {
+        parts:   &[],
+        cases:   &[],
+        numbers: &[],
+        needs:   scope::Needs {
+            stress: false,
+            parts:  true
+        }
+    };
+}
 
 /// The prefixes that keep the `и` after them.
 ///
@@ -129,7 +144,7 @@ pub fn found(written: &str, parts: Parts) -> Findings {
     }
 
     held.push(Found::new(
-        CITES,
+        Rule::CITES,
         length,
         SAYS,
         spelled(written, length, WRITTEN)
@@ -143,8 +158,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 7);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 7);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]

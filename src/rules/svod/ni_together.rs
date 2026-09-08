@@ -17,8 +17,24 @@ pub mod pronouns;
 
 use crate::rules::Citation;
 
-/// Where the paragraph is written.
-pub const CITES: Citation = Citation::whole(90);
+/// § 90 as a rule.
+///
+/// Holds where the paragraph is written and the particle it joins.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::ni_together::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 90);
+/// assert_eq!(Rule::PARTICLE, "ни");
+/// ```
+pub struct Rule;
 
-/// The particle the paragraph joins.
-pub const PARTICLE: &str = "ни";
+impl Rule {
+    /// Where the paragraph is written.
+    pub const CITES: Citation = Citation::whole(90);
+
+    /// The particle the paragraph joins.
+    pub const PARTICLE: &str = "ни";
+}

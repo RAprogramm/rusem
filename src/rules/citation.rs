@@ -21,10 +21,10 @@ pub struct Citation {
     pub point:     u16
 }
 
-/// The last paragraph the code of 1956 states.
-pub const LAST: u16 = 203;
-
 impl Citation {
+    /// The last paragraph the code of 1956 states.
+    pub const LAST: u16 = 203;
+
     /// A whole paragraph.
     ///
     /// # Examples
@@ -65,7 +65,7 @@ impl Citation {
     /// it rather than carrying a reference a reader cannot follow.
     #[must_use]
     pub const fn is_stated(self) -> bool {
-        self.paragraph >= 1 && self.paragraph <= LAST
+        self.paragraph >= 1 && self.paragraph <= Self::LAST
     }
 }
 
@@ -96,9 +96,9 @@ mod tests {
     #[test]
     fn a_paragraph_outside_the_code_is_not_stated() {
         assert!(Citation::whole(1).is_stated());
-        assert!(Citation::whole(LAST).is_stated());
+        assert!(Citation::whole(Citation::LAST).is_stated());
         assert!(!Citation::whole(0).is_stated());
-        assert!(!Citation::whole(LAST + 1).is_stated());
+        assert!(!Citation::whole(Citation::LAST + 1).is_stated());
     }
 
     #[test]

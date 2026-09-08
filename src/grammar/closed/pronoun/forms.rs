@@ -13,137 +13,155 @@
 //! Only three classes are here, and only because a gate asks for them. The
 //! rest decline as adjectives and morphology reaches them by rule.
 
-/// The forms `этот` and `тот` take.
+/// The written forms a pronoun takes, grouped by class.
 ///
-/// Listed whole rather than reached by rule: a gate matches a written word,
-/// and asking morphology for a lemma before asking whether the word points at
-/// something would put the whole analyzer between a gate and a list of seven
-/// words.
-pub const DEMONSTRATIVE_FORMS: &[&str] = &[
-    "та",
-    "те",
-    "тем",
-    "теми",
-    "тех",
-    "то",
-    "того",
-    "той",
-    "том",
-    "тому",
-    "тот",
-    "тою",
-    "ту",
-    "эта",
-    "эти",
-    "этим",
-    "этими",
-    "этих",
-    "это",
-    "этого",
-    "этой",
-    "этом",
-    "этому",
-    "этот",
-    "эту",
-    "этою"
-];
+/// Dictionary forms live in [`super`]; these are what a gate meets on the page.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::pronoun::Forms;
+///
+/// assert!(Forms::DEMONSTRATIVE_FORMS.contains(&"того"));
+/// assert!(Forms::POSSESSIVE_FORMS.contains(&"моего"));
+/// assert!(Forms::ASKING_FORMS.contains(&"кого"));
+/// ```
+pub struct Forms;
 
-/// The forms the possessive pronouns take.
-///
-/// The spellings with `е` written for `ё` stand beside the `ё` ones — `мое`
-/// beside `моё`, `моем` beside `моём` — because print drops the two dots and
-/// a gate reads what is printed.
-pub const POSSESSIVE_FORMS: &[&str] = &[
-    "ваш",
-    "ваша",
-    "ваше",
-    "ваши",
-    "вашего",
-    "вашей",
-    "вашем",
-    "вашему",
-    "вашим",
-    "вашими",
-    "ваших",
-    "вашу",
-    "его",
-    "ее",
-    "её",
-    "их",
-    "мое",
-    "моего",
-    "моей",
-    "моем",
-    "моём",
-    "моему",
-    "мои",
-    "моими",
-    "моих",
-    "мой",
-    "моим",
-    "моя",
-    "моё",
-    "наш",
-    "наша",
-    "наше",
-    "наши",
-    "нашего",
-    "нашей",
-    "нашем",
-    "нашему",
-    "нашим",
-    "нашими",
-    "наших",
-    "нашу",
-    "свое",
-    "своего",
-    "своей",
-    "своем",
-    "своём",
-    "своему",
-    "свои",
-    "своим",
-    "своими",
-    "своих",
-    "свой",
-    "своя",
-    "своё",
-    "твое",
-    "твоего",
-    "твоей",
-    "твоем",
-    "твоём",
-    "твоему",
-    "твои",
-    "твоим",
-    "твоими",
-    "твоих",
-    "твой",
-    "твоя",
-    "твоё"
-];
+impl Forms {
+    /// The forms `этот` and `тот` take.
+    ///
+    /// Listed whole rather than reached by rule: a gate matches a written word,
+    /// and asking morphology for a lemma before asking whether the word points
+    /// at something would put the whole analyzer between a gate and a list
+    /// of seven words.
+    pub const DEMONSTRATIVE_FORMS: &[&str] = &[
+        "та",
+        "те",
+        "тем",
+        "теми",
+        "тех",
+        "то",
+        "того",
+        "той",
+        "том",
+        "тому",
+        "тот",
+        "тою",
+        "ту",
+        "эта",
+        "эти",
+        "этим",
+        "этими",
+        "этих",
+        "это",
+        "этого",
+        "этой",
+        "этом",
+        "этому",
+        "этот",
+        "эту",
+        "этою"
+    ];
 
-/// The forms `кто` and `что` take, with the asking words that decline by rule.
-///
-/// `кто` and `что` are irregular — `кого`, `чего`, `чем` — and no rule reaches
-/// them from the lemma.
-pub const ASKING_FORMS: &[&str] = &[
-    "каков",
-    "какой",
-    "кем",
-    "ком",
-    "кого",
-    "кому",
-    "который",
-    "кто",
-    "сколько",
-    "чего",
-    "чей",
-    "чем",
-    "чему",
-    "что",
-    "чём"
-];
+    /// The forms the possessive pronouns take.
+    ///
+    /// The spellings with `е` written for `ё` stand beside the `ё` ones — `мое`
+    /// beside `моё`, `моем` beside `моём` — because print drops the two dots
+    /// and a gate reads what is printed.
+    pub const POSSESSIVE_FORMS: &[&str] = &[
+        "ваш",
+        "ваша",
+        "ваше",
+        "ваши",
+        "вашего",
+        "вашей",
+        "вашем",
+        "вашему",
+        "вашим",
+        "вашими",
+        "ваших",
+        "вашу",
+        "его",
+        "ее",
+        "её",
+        "их",
+        "мое",
+        "моего",
+        "моей",
+        "моем",
+        "моём",
+        "моему",
+        "мои",
+        "моими",
+        "моих",
+        "мой",
+        "моим",
+        "моя",
+        "моё",
+        "наш",
+        "наша",
+        "наше",
+        "наши",
+        "нашего",
+        "нашей",
+        "нашем",
+        "нашему",
+        "нашим",
+        "нашими",
+        "наших",
+        "нашу",
+        "свое",
+        "своего",
+        "своей",
+        "своем",
+        "своём",
+        "своему",
+        "свои",
+        "своим",
+        "своими",
+        "своих",
+        "свой",
+        "своя",
+        "своё",
+        "твое",
+        "твоего",
+        "твоей",
+        "твоем",
+        "твоём",
+        "твоему",
+        "твои",
+        "твоим",
+        "твоими",
+        "твоих",
+        "твой",
+        "твоя",
+        "твоё"
+    ];
+
+    /// The forms `кто` and `что` take, with the asking words that decline by
+    /// rule.
+    ///
+    /// `кто` and `что` are irregular — `кого`, `чего`, `чем` — and no rule
+    /// reaches them from the lemma.
+    pub const ASKING_FORMS: &[&str] = &[
+        "каков",
+        "какой",
+        "кем",
+        "ком",
+        "кого",
+        "кому",
+        "который",
+        "кто",
+        "сколько",
+        "чего",
+        "чей",
+        "чем",
+        "чему",
+        "что",
+        "чём"
+    ];
+}
 
 /// Reports whether a written word points, in any form it takes.
 ///
@@ -161,13 +179,13 @@ pub const ASKING_FORMS: &[&str] = &[
 /// ```
 #[must_use]
 pub fn points_in_any_form(written: &str) -> bool {
-    DEMONSTRATIVE_FORMS.contains(&written.to_lowercase().as_str())
+    Forms::DEMONSTRATIVE_FORMS.contains(&written.to_lowercase().as_str())
 }
 
 /// Reports whether a written word says whose, in any form it takes.
 #[must_use]
 pub fn possesses_in_any_form(written: &str) -> bool {
-    POSSESSIVE_FORMS.contains(&written.to_lowercase().as_str())
+    Forms::POSSESSIVE_FORMS.contains(&written.to_lowercase().as_str())
 }
 
 /// Reports whether a written word asks, in any form it takes.
@@ -183,13 +201,13 @@ pub fn possesses_in_any_form(written: &str) -> bool {
 /// ```
 #[must_use]
 pub fn asks_in_any_form(written: &str) -> bool {
-    ASKING_FORMS.contains(&written.to_lowercase().as_str())
+    Forms::ASKING_FORMS.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{ASKING, POSSESSIVE},
+        super::{Class, asking::Asking},
         *
     };
 
@@ -198,13 +216,13 @@ mod tests {
         for held in ["тот", "этот"] {
             assert!(points_in_any_form(held), "{held} points and is not listed");
         }
-        for held in POSSESSIVE {
+        for held in Class::POSSESSIVE {
             assert!(
                 possesses_in_any_form(held),
                 "{held} possesses and is not listed"
             );
         }
-        for held in ASKING {
+        for held in Asking::PRONOUNS {
             assert!(asks_in_any_form(held), "{held} asks and is not listed");
         }
     }
@@ -226,7 +244,7 @@ mod tests {
 
     #[test]
     fn every_yo_cell_has_its_printed_e_neighbour() {
-        for held in POSSESSIVE_FORMS {
+        for held in Forms::POSSESSIVE_FORMS {
             if !held.contains('ё') {
                 continue;
             }
@@ -248,7 +266,11 @@ mod tests {
 
     #[test]
     fn the_forms_hold_no_word_twice() {
-        for class in [DEMONSTRATIVE_FORMS, POSSESSIVE_FORMS, ASKING_FORMS] {
+        for class in [
+            Forms::DEMONSTRATIVE_FORMS,
+            Forms::POSSESSIVE_FORMS,
+            Forms::ASKING_FORMS
+        ] {
             let mut held = class.to_vec();
             held.sort_unstable();
             held.dedup();

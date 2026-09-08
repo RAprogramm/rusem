@@ -20,25 +20,6 @@
 //! pronouns: `дом, где мы жили` opens a subordinate clause with an adverb.
 //! That is why [`crate::grammar::closed::conjunction`] asks this module.
 
-/// The adverbs that point at what has already been said.
-pub const DEMONSTRATIVE: &[&str] = &[
-    "везде",
-    "затем",
-    "здесь",
-    "настолько",
-    "оттого",
-    "оттуда",
-    "отсюда",
-    "поэтому",
-    "потому",
-    "сюда",
-    "так",
-    "там",
-    "тогда",
-    "тут",
-    "туда"
-];
-
 /// The adverbs that ask, and the same ones that hang a clause.
 ///
 /// Interrogative and relative hold one list, as they do among the pronouns:
@@ -48,19 +29,7 @@ pub const DEMONSTRATIVE: &[&str] = &[
 /// Stated in [`asking`], beside the pronouns that ask: the negative and the
 /// indefinite adverbs are built out of both, and building them in two places
 /// would let the two disagree.
-pub use super::asking::{self, ADVERBS as ASKING};
-
-/// The adverbs that take in every place, time or way there is.
-pub const DEFINITIVE: &[&str] = &[
-    "всегда",
-    "всюду",
-    "всячески",
-    "отовсюду",
-    "по-всякому",
-    "по-другому",
-    "по-иному",
-    "повсюду"
-];
+pub use super::asking::{self, Asking};
 
 /// The negative and indefinite adverbs the building does not reach.
 ///
@@ -86,19 +55,6 @@ const UNBUILT: &[(&str, Class)] = &[
     ("ничуть", Class::Negative)
 ];
 
-/// The adverbs that say by whose reckoning.
-///
-/// Some grammars give them a class of their own and others fold them into the
-/// possessive pronouns. They are listed apart because a checker meets them as
-/// adverbs — `по-моему` stands where `так` stands.
-pub const POSSESSIVE: &[&str] = &[
-    "по-вашему",
-    "по-моему",
-    "по-нашему",
-    "по-своему",
-    "по-твоему"
-];
-
 /// Which class a pronominal adverb belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -118,12 +74,58 @@ pub enum Class {
     Possessive
 }
 
+impl Class {
+    /// The adverbs that point at what has already been said.
+    pub const DEMONSTRATIVE: &[&str] = &[
+        "везде",
+        "затем",
+        "здесь",
+        "настолько",
+        "оттого",
+        "оттуда",
+        "отсюда",
+        "поэтому",
+        "потому",
+        "сюда",
+        "так",
+        "там",
+        "тогда",
+        "тут",
+        "туда"
+    ];
+
+    /// The adverbs that take in every place, time or way there is.
+    pub const DEFINITIVE: &[&str] = &[
+        "всегда",
+        "всюду",
+        "всячески",
+        "отовсюду",
+        "по-всякому",
+        "по-другому",
+        "по-иному",
+        "повсюду"
+    ];
+
+    /// The adverbs that say by whose reckoning.
+    ///
+    /// Some grammars give them a class of their own and others fold them into
+    /// the possessive pronouns. They are listed apart because a checker
+    /// meets them as adverbs — `по-моему` stands where `так` stands.
+    pub const POSSESSIVE: &[&str] = &[
+        "по-вашему",
+        "по-моему",
+        "по-нашему",
+        "по-своему",
+        "по-твоему"
+    ];
+}
+
 /// Every class, with the words in it.
 const CLASSES: &[(Class, &[&str])] = &[
-    (Class::Demonstrative, DEMONSTRATIVE),
-    (Class::Asking, ASKING),
-    (Class::Definitive, DEFINITIVE),
-    (Class::Possessive, POSSESSIVE)
+    (Class::Demonstrative, Class::DEMONSTRATIVE),
+    (Class::Asking, Asking::ADVERBS),
+    (Class::Definitive, Class::DEFINITIVE),
+    (Class::Possessive, Class::POSSESSIVE)
 ];
 
 /// The class a written adverb belongs to, or nothing when it points at nothing.

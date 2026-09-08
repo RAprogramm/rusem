@@ -26,35 +26,38 @@ pub enum Sense {
     Attaching
 }
 
-/// The conjunctions that add.
-///
-/// `ни` is here because `ни…ни` adds under negation: `ни он, ни она не
-/// пришли` denies both, which is the second put beside the first, not a
-/// choice between them. The grammars list `ни…ни` with `и` and `тоже` among
-/// the connective conjunctions for that reason.
-pub const CONNECTIVE: &[&str] = &["и", "ни", "также", "тоже"];
+impl Sense {
+    /// The conjunctions that add.
+    ///
+    /// `ни` is here because `ни…ни` adds under negation: `ни он, ни она не
+    /// пришли` denies both, which is the second put beside the first, not a
+    /// choice between them. The grammars list `ни…ни` with `и` and `тоже` among
+    /// the connective conjunctions for that reason.
+    pub const CONNECTIVE: &[&str] = &["и", "ни", "также", "тоже"];
 
-/// The conjunctions that oppose.
-pub const ADVERSATIVE: &[&str] = &["а", "же", "зато", "но", "однако"];
+    /// The conjunctions that oppose.
+    pub const ADVERSATIVE: &[&str] = &["а", "же", "зато", "но", "однако"];
 
-/// The conjunctions that offer a choice.
-pub const DISJUNCTIVE: &[&str] = &["или", "либо"];
+    /// The conjunctions that offer a choice.
+    pub const DISJUNCTIVE: &[&str] = &["или", "либо"];
 
-/// The conjunctions that say the second on top of the first.
-pub const ATTACHING: &[&str] = &["притом", "причём"];
+    /// The conjunctions that say the second on top of the first.
+    pub const ATTACHING: &[&str] = &["притом", "причём"];
 
-/// The conjunctions that both add and oppose.
-///
-/// `да` alone is in two senses at once: `хлеб да соль` adds and `мал да удал`
-/// opposes. Nothing in the word tells which, and [`senses`] answers both.
-pub const AMBIGUOUS: &[(&str, &[Sense])] = &[("да", &[Sense::Connective, Sense::Adversative])];
+    /// The conjunctions that both add and oppose.
+    ///
+    /// `да` alone is in two senses at once: `хлеб да соль` adds and `мал да
+    /// удал` opposes. Nothing in the word tells which, and [`senses`]
+    /// answers both.
+    pub const AMBIGUOUS: &[(&str, &[Sense])] = &[("да", &[Sense::Connective, Sense::Adversative])];
+}
 
 /// Every sense, with the conjunctions of one sense only.
 const PLAIN: &[(Sense, &[&str])] = &[
-    (Sense::Connective, CONNECTIVE),
-    (Sense::Adversative, ADVERSATIVE),
-    (Sense::Disjunctive, DISJUNCTIVE),
-    (Sense::Attaching, ATTACHING)
+    (Sense::Connective, Sense::CONNECTIVE),
+    (Sense::Adversative, Sense::ADVERSATIVE),
+    (Sense::Disjunctive, Sense::DISJUNCTIVE),
+    (Sense::Attaching, Sense::ATTACHING)
 ];
 
 /// The senses a coordinating conjunction joins in.
@@ -75,7 +78,7 @@ const PLAIN: &[(Sense, &[&str])] = &[
 pub fn senses(written: &str) -> Vec<Sense> {
     let held = written.to_lowercase();
 
-    if let Some((_, senses)) = AMBIGUOUS.iter().find(|(word, _)| *word == held) {
+    if let Some((_, senses)) = Sense::AMBIGUOUS.iter().find(|(word, _)| *word == held) {
         return (*senses).to_vec();
     }
 
@@ -122,7 +125,7 @@ mod tests {
                 );
             }
         }
-        for (held, _) in AMBIGUOUS {
+        for (held, _) in Sense::AMBIGUOUS {
             assert!(
                 COORDINATING.contains(held),
                 "{held} is no coordinating conjunction"

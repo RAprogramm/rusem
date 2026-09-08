@@ -11,14 +11,29 @@
 //! Список закрыт самим источником, поэтому здесь он допустим: слово вне
 //! перечня — `низачем` — пункт не пишет, и правило о нём молчит.
 
-use super::PARTICLE;
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(90, 2);
+/// § 90, пункт 2, as a rule.
+///
+/// Holds where the point is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::ni_together::adverbs::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 90);
+/// assert_eq!(Rule::CITES.point, 2);
+/// ```
+pub struct Rule;
 
-/// What this point is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this point is written.
+    pub const CITES: Citation = Citation::point(90, 2);
+
+    /// What this point is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// The adverbs the point enumerates.
 ///
@@ -69,7 +84,7 @@ pub fn found(written: &str) -> Findings {
     let (Some(particle), Some(rest), None) = (said.next(), said.next(), said.next()) else {
         return held;
     };
-    if particle != PARTICLE {
+    if particle != super::Rule::PARTICLE {
         return held;
     }
 
@@ -78,7 +93,12 @@ pub fn found(written: &str) -> Findings {
         return held;
     }
 
-    held.push(Found::new(CITES, particle.chars().count(), SAYS, joined));
+    held.push(Found::new(
+        Rule::CITES,
+        particle.chars().count(),
+        SAYS,
+        joined
+    ));
     held
 }
 
@@ -88,8 +108,8 @@ mod tests {
 
     #[test]
     fn the_point_is_cited() {
-        assert_eq!(CITES.paragraph, 90);
-        assert_eq!(CITES.point, 2);
+        assert_eq!(Rule::CITES.paragraph, 90);
+        assert_eq!(Rule::CITES.point, 2);
     }
 
     #[test]
@@ -97,14 +117,14 @@ mod tests {
         let held = found("ни когда");
 
         assert_eq!(held.len(), 1);
-        assert_eq!(held[0].cites, CITES);
+        assert_eq!(held[0].cites, Rule::CITES);
         assert_eq!(held[0].instead, "никогда");
     }
 
     #[test]
     fn every_adverb_the_point_names_is_reached() {
         for joined in JOINED {
-            let parted = std::format!("ни {}", &joined[PARTICLE.len()..]);
+            let parted = std::format!("ни {}", &joined[super::super::Rule::PARTICLE.len()..]);
 
             assert_eq!(found(&parted)[0].instead, *joined, "{joined}");
         }

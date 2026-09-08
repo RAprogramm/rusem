@@ -22,70 +22,117 @@ use crate::grammar::Case;
 pub mod origin;
 
 /// The prepositions.
-pub const PREPOSITIONS: &[&str] = &[
-    "без",
-    "безо",
-    "благодаря",
-    "близ",
-    "в",
-    "вблизи",
-    "вдоль",
-    "вместо",
-    "вне",
-    "внутри",
-    "во",
-    "возле",
-    "вокруг",
-    "вопреки",
-    "впереди",
-    "вследствие",
-    "для",
-    "до",
-    "за",
-    "из",
-    "из-за",
-    "из-под",
-    "изо",
-    "к",
-    "кроме",
-    "ко",
-    "между",
-    "мимо",
-    "на",
-    "навстречу",
-    "над",
-    "надо",
-    "наперекор",
-    "напротив",
-    "о",
-    "об",
-    "обо",
-    "около",
-    "от",
-    "ото",
-    "перед",
-    "передо",
-    "по",
-    "под",
-    "подо",
-    "позади",
-    "помимо",
-    "после",
-    "посреди",
-    "при",
-    "про",
-    "против",
-    "ради",
-    "с",
-    "сверх",
-    "сзади",
-    "сквозь",
-    "со",
-    "согласно",
-    "среди",
-    "у",
-    "через"
-];
+///
+/// Holds every preposition and the ones written as more than one word.
+/// Where each came from is stated in [`origin`].
+///
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::preposition::Preposition;
+///
+/// assert!(Preposition::PREPOSITIONS.contains(&"в"));
+/// assert!(
+///     Preposition::COMPOUND
+///         .iter()
+///         .any(|(held, _)| *held == "в течение")
+/// );
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Preposition;
+
+impl Preposition {
+    /// The prepositions.
+    pub const PREPOSITIONS: &[&str] = &[
+        "без",
+        "безо",
+        "благодаря",
+        "близ",
+        "в",
+        "вблизи",
+        "вдоль",
+        "вместо",
+        "вне",
+        "внутри",
+        "во",
+        "возле",
+        "вокруг",
+        "вопреки",
+        "впереди",
+        "вследствие",
+        "для",
+        "до",
+        "за",
+        "из",
+        "из-за",
+        "из-под",
+        "изо",
+        "к",
+        "кроме",
+        "ко",
+        "между",
+        "мимо",
+        "на",
+        "навстречу",
+        "над",
+        "надо",
+        "наперекор",
+        "напротив",
+        "о",
+        "об",
+        "обо",
+        "около",
+        "от",
+        "ото",
+        "перед",
+        "передо",
+        "по",
+        "под",
+        "подо",
+        "позади",
+        "помимо",
+        "после",
+        "посреди",
+        "при",
+        "про",
+        "против",
+        "ради",
+        "с",
+        "сверх",
+        "сзади",
+        "сквозь",
+        "со",
+        "согласно",
+        "среди",
+        "у",
+        "через"
+    ];
+
+    /// The prepositions written as more than one word.
+    ///
+    /// `в течение дня`, `несмотря на дождь`. They govern the same way the
+    /// simple ones do, but a tokenizer sees two or three words where the
+    /// grammar sees one, so they are matched against a run of words rather
+    /// than against a word. A derived preposition written as one word —
+    /// `вследствие`, `согласно` — is one word to a tokenizer too, and stands
+    /// in [`Preposition::PREPOSITIONS`] with the rest.
+    pub const COMPOUND: &[(&str, Case)] = &[
+        ("в отличие от", Case::Genitive),
+        ("в продолжение", Case::Genitive),
+        ("в связи с", Case::Instrumental),
+        ("в силу", Case::Genitive),
+        ("в течение", Case::Genitive),
+        ("в ходе", Case::Genitive),
+        ("во время", Case::Genitive),
+        ("за счёт", Case::Genitive),
+        ("на протяжении", Case::Genitive),
+        ("наряду с", Case::Instrumental),
+        ("несмотря на", Case::Accusative),
+        ("по мере", Case::Genitive),
+        ("по поводу", Case::Genitive),
+        ("по причине", Case::Genitive)
+    ];
+}
 
 /// The cases each preposition takes, in the order the prepositions are listed
 /// above.
@@ -161,30 +208,6 @@ const GOVERNMENT: &[(&str, &[Case])] = &[
     ("через", &[Case::Accusative])
 ];
 
-/// The prepositions written as more than one word.
-///
-/// `в течение дня`, `несмотря на дождь`. They govern the same way the simple
-/// ones do, but a tokenizer sees two or three words where the grammar sees
-/// one, so they are matched against a run of words rather than against a word.
-/// A derived preposition written as one word — `вследствие`, `согласно` — is
-/// one word to a tokenizer too, and stands in [`PREPOSITIONS`] with the rest.
-pub const COMPOUND: &[(&str, Case)] = &[
-    ("в отличие от", Case::Genitive),
-    ("в продолжение", Case::Genitive),
-    ("в связи с", Case::Instrumental),
-    ("в силу", Case::Genitive),
-    ("в течение", Case::Genitive),
-    ("в ходе", Case::Genitive),
-    ("во время", Case::Genitive),
-    ("за счёт", Case::Genitive),
-    ("на протяжении", Case::Genitive),
-    ("наряду с", Case::Instrumental),
-    ("несмотря на", Case::Accusative),
-    ("по мере", Case::Genitive),
-    ("по поводу", Case::Genitive),
-    ("по причине", Case::Genitive)
-];
-
 /// The case a compound preposition takes, when the words open with one.
 ///
 /// The longest match wins: `в связи с` is one preposition and not `в` followed
@@ -208,7 +231,7 @@ pub const COMPOUND: &[(&str, Case)] = &[
 pub fn compound(written: &str) -> Option<(&'static str, Case)> {
     let held = written.to_lowercase();
 
-    COMPOUND
+    Preposition::COMPOUND
         .iter()
         .filter(|(preposition, _)| {
             held.strip_prefix(preposition)
@@ -221,7 +244,7 @@ pub fn compound(written: &str) -> Option<(&'static str, Case)> {
 /// Reports whether a written word is a preposition.
 #[must_use]
 pub fn is_preposition(written: &str) -> bool {
-    PREPOSITIONS.contains(&written.to_lowercase().as_str())
+    Preposition::PREPOSITIONS.contains(&written.to_lowercase().as_str())
 }
 
 /// The cases a preposition takes, empty when the word is no preposition.
@@ -262,7 +285,7 @@ mod tests {
 
     #[test]
     fn every_preposition_has_a_case_and_every_governed_word_is_a_preposition() {
-        for held in PREPOSITIONS {
+        for held in Preposition::PREPOSITIONS {
             assert!(!governs(held).is_empty(), "{held} governs nothing");
         }
         for (held, _) in GOVERNMENT {
@@ -346,7 +369,7 @@ mod tests {
 
     #[test]
     fn every_compound_is_written_small_and_governs_one_case() {
-        for (held, _) in COMPOUND {
+        for (held, _) in Preposition::COMPOUND {
             assert_eq!(*held, held.to_lowercase(), "{held} is not written small");
             assert!(compound(held).is_some(), "{held} names no case");
         }

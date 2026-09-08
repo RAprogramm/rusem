@@ -10,22 +10,37 @@
 //! Предлог между частицей и словом разводит их обратно: `ни у кого` пишется в
 //! три слова, и это уже не тот случай, о котором говорит пункт.
 //!
-//! Что считается вопросительным местоимением, решает [`asking::PRONOUNS`]:
+//! Что считается вопросительным местоимением, решает [`Asking::PRONOUNS`]:
 //! слияние и построение — один и тот же факт, увиденный с двух сторон.
 //! `нисколько` пункт 2 называет наречием, и хотя `сколько` стоит среди
 //! местоимений, слово уходит туда, куда его записал источник.
 
-use super::PARTICLE;
 use crate::{
-    grammar::closed::asking,
+    grammar::closed::asking::Asking,
     rules::{Citation, Findings, Found, Scope, scope}
 };
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(90, 1);
+/// § 90, пункт 1, as a rule.
+///
+/// Holds where the point is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::ni_together::pronouns::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 90);
+/// assert_eq!(Rule::CITES.point, 1);
+/// ```
+pub struct Rule;
 
-/// What this point is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this point is written.
+    pub const CITES: Citation = Citation::point(90, 1);
+
+    /// What this point is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// What the point says when it is broken.
 const SAYS: &str = "частица ни пишется с местоимением слитно";
@@ -53,7 +68,7 @@ pub fn found(written: &str) -> Findings {
     let (Some(particle), Some(rest), None) = (said.next(), said.next(), said.next()) else {
         return held;
     };
-    if particle != PARTICLE || !asking::PRONOUNS.contains(&rest) {
+    if particle != super::Rule::PARTICLE || !Asking::PRONOUNS.contains(&rest) {
         return held;
     }
 
@@ -62,7 +77,12 @@ pub fn found(written: &str) -> Findings {
         return held;
     }
 
-    held.push(Found::new(CITES, particle.chars().count(), SAYS, joined));
+    held.push(Found::new(
+        Rule::CITES,
+        particle.chars().count(),
+        SAYS,
+        joined
+    ));
     held
 }
 
@@ -72,8 +92,8 @@ mod tests {
 
     #[test]
     fn the_point_is_cited() {
-        assert_eq!(CITES.paragraph, 90);
-        assert_eq!(CITES.point, 1);
+        assert_eq!(Rule::CITES.paragraph, 90);
+        assert_eq!(Rule::CITES.point, 1);
     }
 
     #[test]

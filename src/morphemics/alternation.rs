@@ -43,9 +43,6 @@ const CLUSTERS: &[(&str, &str)] = &[("ск", "щ"), ("ст", "щ"), ("зд", "з
 /// The consonants that take an `л` rather than swapping: `любить` — `люблю`.
 const LABIAL: &[char] = &['б', 'п', 'в', 'ф', 'м'];
 
-/// The letter a labial takes after it.
-pub const EPENTHESIS: char = 'л';
-
 /// Which set of swaps is being asked for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -55,6 +52,11 @@ pub enum Kind {
     Velar,
     /// The swap the present stem makes against the infinitive.
     Present
+}
+
+impl Kind {
+    /// The letter a labial takes after it.
+    pub const EPENTHESIS: char = 'л';
 }
 
 /// The consonant a stem ends with once the swap has been made.

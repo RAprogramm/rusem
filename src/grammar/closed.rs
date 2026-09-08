@@ -37,10 +37,9 @@ pub mod pronoun;
 
 pub use self::{
     conjunction::{COORDINATING, SUBORDINATING},
-    numeral::{CARDINAL, COLLECTIVE, ORDINAL},
     particle::{DENYING, ENCLITIC, PARTICLES},
     preposition::{PREPOSITIONS, governs},
-    pronoun::{Class as PronounClass, DEMONSTRATIVE, PERSONAL, POSSESSIVE}
+    pronoun::Class as PronounClass
 };
 
 /// Reports whether a written word is a function word.
@@ -75,9 +74,9 @@ mod tests {
             SUBORDINATING,
             PARTICLES,
             PREPOSITIONS,
-            DEMONSTRATIVE,
-            POSSESSIVE,
-            PERSONAL
+            PronounClass::DEMONSTRATIVE,
+            PronounClass::POSSESSIVE,
+            PronounClass::PERSONAL
         ] {
             let mut held = class.to_vec();
             held.sort_unstable();
@@ -94,17 +93,17 @@ mod tests {
             SUBORDINATING,
             PARTICLES,
             PREPOSITIONS,
-            adverb::DEMONSTRATIVE,
-            adverb::ASKING,
-            adverb::DEFINITIVE,
+            adverb::Class::DEMONSTRATIVE,
+            asking::Asking::ADVERBS,
+            adverb::Class::DEFINITIVE,
             asking::PRONOUNS,
             asking::ADVERBS,
-            adverb::POSSESSIVE,
+            adverb::Class::POSSESSIVE,
             parenthetical::ALWAYS,
             parenthetical::NEVER,
             parenthetical::EITHER,
-            PERSONAL,
-            pronoun::REFLEXIVE
+            PronounClass::PERSONAL,
+            pronoun::Class::REFLEXIVE
         ] {
             for held in class {
                 assert!(

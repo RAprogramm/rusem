@@ -150,7 +150,7 @@ pub fn stem(
         return Some(bare);
     }
 
-    Some(bare + declension::GROWTH)
+    Some(bare + declension::Declension::GROWTH)
 }
 
 /// Reports whether a mixed noun in `-мя` grows its stem in this cell.

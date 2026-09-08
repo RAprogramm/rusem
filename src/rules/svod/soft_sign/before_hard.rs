@@ -12,14 +12,31 @@
 use super::{After, handed_over, stands, with_sign, without_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this rule is written.
+/// The point as a rule: what it cites and what it is about.
 ///
-/// The before-a-hard-consonant sentence is unnumbered prose in § 72, so the
-/// citation is the paragraph whole.
-pub const CITES: Citation = Citation::whole(72);
+/// Holds the citation and the scope together so the engine can list the
+/// point alongside the other paragraphs. The judging function [`found`]
+/// stays free.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::soft_sign::before_hard::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 72);
+/// ```
+pub struct Rule;
 
-/// What this point is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this rule is written.
+    ///
+    /// The before-a-hard-consonant sentence is unnumbered prose in § 72, so the
+    /// citation is the paragraph whole.
+    pub const CITES: Citation = Citation::whole(72);
+
+    /// What this point is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// What the point says when the sign is missing.
 const SAYS: &str = "мягкость согласной перед твёрдой обозначается мягким знаком";
@@ -58,7 +75,7 @@ pub fn found(word: &str, written: char, soft: bool, after: After, at: usize) -> 
         (SAYS_NOT, without_sign(word, at))
     };
 
-    held.push(Found::new(CITES, at + 1, says, instead));
+    held.push(Found::new(Rule::CITES, at + 1, says, instead));
     held
 }
 
@@ -68,8 +85,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited_whole() {
-        assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 0);
+        assert_eq!(Rule::CITES.paragraph, 72);
+        assert_eq!(Rule::CITES.point, 0);
     }
 
     #[test]

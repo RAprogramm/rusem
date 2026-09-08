@@ -222,7 +222,7 @@ fn left(held: char, before: Option<char>, after: Option<char>) -> Option<char> {
         return None;
     };
 
-    soft_sign::before_l::keeps(before, after).then_some(soft_sign::SIGN)
+    soft_sign::before_l::keeps(before, after).then_some(soft_sign::Rule::SIGN)
 }
 
 /// Where the fleeting vowel stands and which it is: the last vowel with a

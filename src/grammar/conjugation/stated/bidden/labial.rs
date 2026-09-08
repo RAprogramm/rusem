@@ -52,7 +52,7 @@ pub(super) fn soft(infinitive: &str, index: VerbIndex) -> bool {
 pub(super) fn shed(held: String, index: VerbIndex) -> String {
     let mut letters = held.chars().rev();
     let grown = matches!(index.kind, Kind::Six)
-        && letters.next() == Some(crate::morphemics::alternation::EPENTHESIS)
+        && letters.next() == Some(crate::morphemics::alternation::Kind::EPENTHESIS)
         && letters
             .next()
             .is_some_and(crate::morphemics::alternation::takes_epenthesis);

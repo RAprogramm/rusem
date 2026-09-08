@@ -12,17 +12,35 @@
 //! `иллюзия`, `гулливый`, — и это единственный случай, когда пункт молчит о
 //! своей же букве.
 
-use super::{After, NAMED, stands, with_sign};
+use super::{After, stands, with_sign};
 use crate::rules::{Citation, Findings, Found, Scope, scope};
 
-/// Where this point is written.
+/// The point as a rule: what it cites and what it is about.
 ///
-/// The second of the two numbered points of § 72 — both belong to the
-/// soft-before-soft case.
-pub const CITES: Citation = Citation::point(72, 2);
+/// Holds the citation and the scope together so the engine can list the
+/// point alongside the other paragraphs. The judging function [`found`]
+/// stays free.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::soft_sign::before_l::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 72);
+/// assert_eq!(Rule::CITES.point, 2);
+/// ```
+pub struct Rule;
 
-/// What this point is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this point is written.
+    ///
+    /// The second of the two numbered points of § 72 — both belong to the
+    /// soft-before-soft case.
+    pub const CITES: Citation = Citation::point(72, 2);
+
+    /// What this point is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// What the point says when the sign is missing.
 const SAYS: &str = "мягкость л обозначается мягким знаком";
@@ -34,7 +52,7 @@ const SAYS: &str = "мягкость л обозначается мягким з
 /// the same letter, by the note.
 #[must_use]
 pub const fn keeps(written: char, next: char) -> bool {
-    written == NAMED && next != NAMED
+    written == super::Rule::NAMED && next != super::Rule::NAMED
 }
 
 /// What the point finds.
@@ -65,7 +83,7 @@ pub fn found(word: &str, written: char, soft: bool, after: After, at: usize) -> 
         return held;
     }
 
-    held.push(Found::new(CITES, at + 1, SAYS, with_sign(word, at)));
+    held.push(Found::new(Rule::CITES, at + 1, SAYS, with_sign(word, at)));
     held
 }
 
@@ -75,8 +93,8 @@ mod tests {
 
     #[test]
     fn the_point_is_cited() {
-        assert_eq!(CITES.paragraph, 72);
-        assert_eq!(CITES.point, 2);
+        assert_eq!(Rule::CITES.paragraph, 72);
+        assert_eq!(Rule::CITES.point, 2);
     }
 
     #[test]

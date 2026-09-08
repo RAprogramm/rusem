@@ -34,104 +34,107 @@ pub enum Origin {
     Verbal
 }
 
-/// The prepositions that were never anything else.
-pub const PRIMITIVE: &[&str] = &[
-    "без",
-    "безо",
-    "в",
-    "во",
-    "для",
-    "до",
-    "за",
-    "из",
-    "из-за",
-    "из-под",
-    "изо",
-    "к",
-    "ко",
-    "между",
-    "на",
-    "над",
-    "надо",
-    "о",
-    "об",
-    "обо",
-    "от",
-    "ото",
-    "перед",
-    "передо",
-    "по",
-    "под",
-    "подо",
-    "при",
-    "про",
-    "ради",
-    "с",
-    "сквозь",
-    "со",
-    "у",
-    "через"
-];
+impl Origin {
+    /// The prepositions that were never anything else.
+    pub const PRIMITIVE: &[&str] = &[
+        "без",
+        "безо",
+        "в",
+        "во",
+        "для",
+        "до",
+        "за",
+        "из",
+        "из-за",
+        "из-под",
+        "изо",
+        "к",
+        "ко",
+        "между",
+        "на",
+        "над",
+        "надо",
+        "о",
+        "об",
+        "обо",
+        "от",
+        "ото",
+        "перед",
+        "передо",
+        "по",
+        "под",
+        "подо",
+        "при",
+        "про",
+        "ради",
+        "с",
+        "сквозь",
+        "со",
+        "у",
+        "через"
+    ];
 
-/// The prepositions that were adverbs.
-pub const ADVERBIAL: &[&str] = &[
-    "близ",
-    "вблизи",
-    "вдоль",
-    "вне",
-    "внутри",
-    "возле",
-    "вокруг",
-    "вопреки",
-    "впереди",
-    "кроме",
-    "мимо",
-    "навстречу",
-    "наперекор",
-    "напротив",
-    "наряду с",
-    "около",
-    "позади",
-    "помимо",
-    "после",
-    "посреди",
-    "против",
-    "сверх",
-    "сзади",
-    "согласно",
-    "среди"
-];
+    /// The prepositions that were adverbs.
+    pub const ADVERBIAL: &[&str] = &[
+        "близ",
+        "вблизи",
+        "вдоль",
+        "вне",
+        "внутри",
+        "возле",
+        "вокруг",
+        "вопреки",
+        "впереди",
+        "кроме",
+        "мимо",
+        "навстречу",
+        "наперекор",
+        "напротив",
+        "наряду с",
+        "около",
+        "позади",
+        "помимо",
+        "после",
+        "посреди",
+        "против",
+        "сверх",
+        "сзади",
+        "согласно",
+        "среди"
+    ];
 
-/// The prepositions that were nouns in a case.
-///
-/// The one-word ones and the compounds alike: `вследствие` and `в течение`
-/// stand or fall by the same rule, and both are a noun that stopped being one.
-pub const NOMINAL: &[&str] = &[
-    "в отличие от",
-    "в продолжение",
-    "в связи с",
-    "в силу",
-    "в течение",
-    "в ходе",
-    "вместо",
-    "во время",
-    "вследствие",
-    "за счёт",
-    "на протяжении",
-    "по мере",
-    "по поводу",
-    "по причине"
-];
+    /// The prepositions that were nouns in a case.
+    ///
+    /// The one-word ones and the compounds alike: `вследствие` and `в течение`
+    /// stand or fall by the same rule, and both are a noun that stopped being
+    /// one.
+    pub const NOMINAL: &[&str] = &[
+        "в отличие от",
+        "в продолжение",
+        "в связи с",
+        "в силу",
+        "в течение",
+        "в ходе",
+        "вместо",
+        "во время",
+        "вследствие",
+        "за счёт",
+        "на протяжении",
+        "по мере",
+        "по поводу",
+        "по причине"
+    ];
 
-/// The prepositions that were adverbial participles.
-pub const VERBAL: &[&str] = &["благодаря", "несмотря на"];
+    /// The prepositions that were adverbial participles.
+    pub const VERBAL: &[&str] = &["благодаря", "несмотря на"];
+}
 
 /// Every origin, with the prepositions of it.
 const ORIGINS: &[(Origin, &[&str])] = &[
-    (Origin::Primitive, PRIMITIVE),
-    (Origin::Adverbial, ADVERBIAL),
-    (Origin::Nominal, NOMINAL),
-    (Origin::Verbal, VERBAL)
+    (Origin::Primitive, Origin::PRIMITIVE),
+    (Origin::Adverbial, Origin::ADVERBIAL),
+    (Origin::Nominal, Origin::NOMINAL),
+    (Origin::Verbal, Origin::VERBAL)
 ];
 
 /// Where a written preposition came from, or nothing when it is none.
@@ -171,17 +174,14 @@ pub fn is_derived(written: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        super::{COMPOUND, PREPOSITIONS},
-        *
-    };
+    use super::{super::Preposition, *};
 
     #[test]
     fn every_preposition_has_an_origin() {
-        for held in PREPOSITIONS {
+        for held in Preposition::PREPOSITIONS {
             assert!(origin(held).is_some(), "{held} came from nowhere");
         }
-        for (held, _) in COMPOUND {
+        for (held, _) in Preposition::COMPOUND {
             assert!(origin(held).is_some(), "{held} came from nowhere");
         }
     }
@@ -191,7 +191,8 @@ mod tests {
         for (named, words) in ORIGINS {
             for held in *words {
                 assert!(
-                    PREPOSITIONS.contains(held) || COMPOUND.iter().any(|(word, _)| word == held),
+                    Preposition::PREPOSITIONS.contains(held)
+                        || Preposition::COMPOUND.iter().any(|(word, _)| word == held),
                     "{held} is under {named:?} and is no preposition"
                 );
             }

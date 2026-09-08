@@ -71,5 +71,5 @@ pub use self::{
 /// ```
 #[must_use]
 pub fn all() -> Vec<&'static dyn Rule> {
-    svod::written::RULES.to_vec()
+    svod::written::Rules::RULES.to_vec()
 }

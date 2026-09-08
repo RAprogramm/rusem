@@ -97,7 +97,7 @@ fn bidden(infinitive: &str, number: Number, stressed: bool) -> Option<String> {
 
     Some(match number {
         Number::Singular => one,
-        Number::Plural => one + imperative::PLURAL
+        Number::Plural => one + imperative::Ending::PLURAL
     })
 }
 
@@ -156,7 +156,7 @@ pub(crate) fn shape(stem: &str, conjugation: Conjugation) -> Stem {
     }
     if crate::alphabet::is_vowel(last)
         || last == GLIDE
-        || last == crate::morphemics::alternation::EPENTHESIS
+        || last == crate::morphemics::alternation::Kind::EPENTHESIS
     {
         return Stem::Soft;
     }

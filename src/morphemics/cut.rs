@@ -238,7 +238,7 @@ pub fn joined(written: &str) -> Option<Joined> {
 
     for at in Cut::SHORTEST_ROOT..letters.len().checked_sub(Cut::SHORTEST_ROOT)? {
         let held = *letters.get(at)?;
-        if !affix::INTERFIXES.contains(&held.to_string().as_str()) {
+        if !affix::Affix::INTERFIXES.contains(&held.to_string().as_str()) {
             continue;
         }
         let first: String = letters.get(..at)?.iter().collect();
@@ -272,7 +272,7 @@ fn fronts(written: &str) -> Vec<(Vec<String>, String)> {
             continue;
         }
 
-        for one in affix::all_leading(affix::PREFIXES, &rest) {
+        for one in affix::all_leading(affix::Affix::PREFIXES, &rest) {
             let left: String = rest.chars().skip(one.chars().count()).collect();
             if !is_a_root(&left) {
                 continue;
@@ -292,7 +292,7 @@ fn fronts(written: &str) -> Vec<(Vec<String>, String)> {
 fn backs(written: &str) -> Vec<(Option<String>, String)> {
     let mut held = std::vec![(None, String::from(written))];
 
-    for one in affix::all_trailing(affix::POSTFIXES, written) {
+    for one in affix::all_trailing(affix::Affix::POSTFIXES, written) {
         let left: String = written
             .chars()
             .take(written.chars().count() - one.chars().count())
@@ -326,7 +326,7 @@ fn tails(written: &str) -> Vec<(Vec<String>, Option<String>, String)> {
                 continue;
             }
 
-            for one in affix::all_trailing(affix::SUFFIXES, &root) {
+            for one in affix::all_trailing(affix::Affix::SUFFIXES, &root) {
                 let left: String = root
                     .chars()
                     .take(root.chars().count() - one.chars().count())
@@ -356,7 +356,7 @@ fn tails(written: &str) -> Vec<(Vec<String>, Option<String>, String)> {
 fn endings(written: &str) -> Vec<Option<String>> {
     let mut held = std::vec![None];
 
-    for one in affix::all_trailing(affix::ENDINGS, written) {
+    for one in affix::all_trailing(affix::Affix::ENDINGS, written) {
         let left: String = written
             .chars()
             .take(written.chars().count() - one.chars().count())

@@ -26,27 +26,45 @@
 //! the existential ones and stays silent about state, and a caller that meets
 //! `холодно` reads the clause rather than a list.
 
-/// The predicatives that state a need or a leave.
-pub const MODAL: &[&str] = &[
-    "должно",
-    "можно",
-    "надлежит",
-    "надо",
-    "нельзя",
-    "необходимо",
-    "нужно",
-    "пора",
-    "следует"
-];
-
-/// The predicatives that state whether there is any.
+/// The predicatives that can be listed.
 ///
-/// `нет` is the whole of the negative existential — `нет времени` — and takes
-/// the genitive where `есть` takes the nominative.
-pub const EXISTENTIAL: &[&str] = &["есть", "нет", "нету"];
+/// Holds the modal ones and the existential ones. The state kind is open
+/// and unlisted.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::predicative::Predicative;
+///
+/// assert!(Predicative::MODAL.contains(&"надо"));
+/// assert!(Predicative::EXISTENTIAL.contains(&"нет"));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Predicative;
+
+impl Predicative {
+    /// The predicatives that state a need or a leave.
+    pub const MODAL: &[&str] = &[
+        "должно",
+        "можно",
+        "надлежит",
+        "надо",
+        "нельзя",
+        "необходимо",
+        "нужно",
+        "пора",
+        "следует"
+    ];
+
+    /// The predicatives that state whether there is any.
+    ///
+    /// `нет` is the whole of the negative existential — `нет времени` — and
+    /// takes the genitive where `есть` takes the nominative.
+    pub const EXISTENTIAL: &[&str] = &["есть", "нет", "нету"];
+}
 
 /// Every predicative the module can list.
-const ALL: &[&[&str]] = &[MODAL, EXISTENTIAL];
+const ALL: &[&[&str]] = &[Predicative::MODAL, Predicative::EXISTENTIAL];
 
 /// Reports whether a written word is a modal or an existential predicative.
 ///
@@ -77,7 +95,7 @@ pub fn is_predicative(written: &str) -> bool {
 /// but the state kind is open and unlisted, so it is not answered here.
 #[must_use]
 pub fn takes_a_dative_actor(written: &str) -> bool {
-    MODAL.contains(&written.to_lowercase().as_str())
+    Predicative::MODAL.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]

@@ -37,11 +37,13 @@ pub struct Needs {
     pub parts:  bool
 }
 
-/// A rule that judges the letters alone.
-pub const NOTHING: Needs = Needs {
-    stress: false,
-    parts:  false
-};
+impl Needs {
+    /// A rule that judges the letters alone.
+    pub const NOTHING: Self = Self {
+        stress: false,
+        parts:  false
+    };
+}
 
 /// The class of word a rule speaks of.
 ///
@@ -60,15 +62,15 @@ pub struct Scope {
     pub needs:   Needs
 }
 
-/// A scope that admits every word and needs nothing but the letters.
-pub const ANY: Scope = Scope {
-    parts:   &[],
-    cases:   &[],
-    numbers: &[],
-    needs:   NOTHING
-};
-
 impl Scope {
+    /// A scope that admits every word and needs nothing but the letters.
+    pub const ANY: Self = Self {
+        parts:   &[],
+        cases:   &[],
+        numbers: &[],
+        needs:   Needs::NOTHING
+    };
+
     /// Reports whether a form is one this rule speaks of.
     ///
     /// A category the rule does not name admits anything, including a form
@@ -94,7 +96,7 @@ impl Scope {
     ///     parts:   &[PartOfSpeech::Noun],
     ///     cases:   &[Case::Prepositional],
     ///     numbers: &[Number::Singular],
-    ///     needs:   scope::NOTHING
+    ///     needs:   scope::Needs::NOTHING
     /// };
     ///
     /// let held = Form::Noun(Agreed::Singular {
@@ -175,7 +177,7 @@ mod tests {
         parts:   &[PartOfSpeech::Noun],
         cases:   &[Case::Prepositional],
         numbers: &[Number::Singular],
-        needs:   NOTHING
+        needs:   Needs::NOTHING
     };
 
     fn noun(case: Case) -> Form {
@@ -187,8 +189,8 @@ mod tests {
 
     #[test]
     fn a_scope_that_names_nothing_admits_everything() {
-        assert!(ANY.admits(noun(Case::Genitive)));
-        assert!(ANY.admits(Form::Preposition));
+        assert!(Scope::ANY.admits(noun(Case::Genitive)));
+        assert!(Scope::ANY.admits(Form::Preposition));
     }
 
     #[test]
@@ -227,7 +229,7 @@ mod tests {
             parts:   &[PartOfSpeech::Noun],
             cases:   &[Case::Genitive],
             numbers: &[],
-            needs:   NOTHING
+            needs:   Needs::NOTHING
         };
 
         assert!(held.admits(noun(Case::Partitive)));

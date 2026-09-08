@@ -28,11 +28,26 @@ use crate::{
     rules::{Citation, Findings, Found, Scope, scope, svod::hyphen_compound::interjections}
 };
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::whole(157);
+/// § 157 as a rule.
+///
+/// Holds where the paragraph is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::interjection_comma::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 157);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::whole(157);
+
+    /// What this rule is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// The words the примечание of § 157 says may be particles instead.
 ///
@@ -133,7 +148,7 @@ pub fn found(written: &str, next: Option<&str>) -> Findings {
     };
 
     held.push(Found::new(
-        CITES,
+        Rule::CITES,
         written.chars().count(),
         SAYS,
         std::format!("{written}, {following}")
@@ -147,8 +162,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 157);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 157);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]

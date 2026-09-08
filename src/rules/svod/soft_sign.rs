@@ -60,14 +60,34 @@ use crate::{
     rules::{Citation, Findings}
 };
 
-/// Where the paragraph is written.
-pub const CITES: Citation = Citation::whole(72);
+/// § 72 as a rule: what it cites, the sign it writes and the consonant it
+/// names.
+///
+/// Holds the paragraph-level facts together so callers name one owner for
+/// them. The judging functions stay free; the points live in their own
+/// modules.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::soft_sign::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 72);
+/// assert_eq!(Rule::SIGN, 'ь');
+/// assert_eq!(Rule::NAMED, 'л');
+/// ```
+pub struct Rule;
 
-/// The letter the paragraph is about.
-pub const SIGN: char = 'ь';
+impl Rule {
+    /// Where the paragraph is written.
+    pub const CITES: Citation = Citation::whole(72);
 
-/// The consonant the second point names.
-pub const NAMED: char = 'л';
+    /// The letter the paragraph is about.
+    pub const SIGN: char = 'ь';
+
+    /// The consonant the second point names.
+    pub const NAMED: char = 'л';
+}
 
 /// What stands after the consonant being judged.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -121,7 +141,7 @@ pub fn judged(word: &str) -> Findings {
     let mut held = Findings::new();
 
     for (at, letter) in letters.iter().enumerate() {
-        if letters.get(at + 1) != Some(&SIGN) {
+        if letters.get(at + 1) != Some(&Rule::SIGN) {
             continue;
         }
         if !crate::alphabet::is_consonant(*letter) || handed_over(*letter) {
@@ -130,7 +150,7 @@ pub fn judged(word: &str) -> Findings {
         let Some(next) = letters.get(at + 2).copied() else {
             continue;
         };
-        let between_two_l = *letter == NAMED && next == NAMED;
+        let between_two_l = *letter == Rule::NAMED && next == Rule::NAMED;
         if !surely_soft(next) && !between_two_l {
             continue;
         }
@@ -166,14 +186,14 @@ pub const fn handed_over(written: char) -> bool {
 /// Reports whether the sign stands after a consonant in a word.
 #[must_use]
 pub fn stands(word: &str, at: usize) -> bool {
-    word.chars().nth(at + 1) == Some(SIGN)
+    word.chars().nth(at + 1) == Some(Rule::SIGN)
 }
 
 /// The word with the sign put in after a consonant.
 #[must_use]
 pub fn with_sign(word: &str, at: usize) -> std::string::String {
     let mut held: std::string::String = word.chars().take(at + 1).collect();
-    held.push(SIGN);
+    held.push(Rule::SIGN);
     held.extend(word.chars().skip(at + 1));
     held
 }
@@ -190,8 +210,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 72);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 72);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]
@@ -199,7 +219,7 @@ mod tests {
         let held = judged("няньчить");
 
         assert_eq!(held.len(), 1);
-        assert_eq!(held[0].cites, not_before_soft::CITES);
+        assert_eq!(held[0].cites, not_before_soft::Rule::CITES);
         assert_eq!(held[0].instead, "нянчить");
     }
 

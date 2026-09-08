@@ -13,17 +13,32 @@
 //! Что считается вопросительным словом, решает [`asking::asks`]: слияние и
 //! построение — один и тот же факт, увиденный с двух сторон.
 
-use super::PARTICLE;
 use crate::{
     grammar::closed::asking,
     rules::{Citation, Findings, Found, Scope, scope}
 };
 
-/// Where this point is written.
-pub const CITES: Citation = Citation::point(88, 5);
+/// § 88, пункт 5, as a rule.
+///
+/// Holds where the point is written and what it is about.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::ne_together::pronouns::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 88);
+/// assert_eq!(Rule::CITES.point, 5);
+/// ```
+pub struct Rule;
 
-/// What this point is about.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this point is written.
+    pub const CITES: Citation = Citation::point(88, 5);
+
+    /// What this point is about.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// What the point says when it is broken.
 const SAYS: &str = "частица не пишется с вопросительным словом слитно";
@@ -51,12 +66,12 @@ pub fn found(written: &str) -> Findings {
     let (Some(particle), Some(rest), None) = (said.next(), said.next(), said.next()) else {
         return held;
     };
-    if particle != PARTICLE || !asking::asks(rest) {
+    if particle != super::Rule::PARTICLE || !asking::asks(rest) {
         return held;
     }
 
     held.push(Found::new(
-        CITES,
+        Rule::CITES,
         particle.chars().count(),
         SAYS,
         std::format!("{particle}{rest}")
@@ -70,8 +85,8 @@ mod tests {
 
     #[test]
     fn the_point_is_cited() {
-        assert_eq!(CITES.paragraph, 88);
-        assert_eq!(CITES.point, 5);
+        assert_eq!(Rule::CITES.paragraph, 88);
+        assert_eq!(Rule::CITES.point, 5);
     }
 
     #[test]

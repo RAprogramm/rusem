@@ -22,74 +22,6 @@
 //! the code of 1956 punctuates it the same way and a checker meets it in the
 //! same place.
 
-/// The interjections of feeling.
-///
-/// `о` is here because § 157 names it one. It is written the same as the
-/// preposition `о`, and nothing but the sentence tells the two apart: the
-/// preposition governs a case and the interjection governs nothing.
-pub const FEELING: &[&str] = &[
-    "ай",
-    "ах",
-    "ба",
-    "батюшки",
-    "боже",
-    "браво",
-    "брр",
-    "господи",
-    "о",
-    "ого",
-    "ой",
-    "ох",
-    "тьфу",
-    "увы",
-    "ура",
-    "уф",
-    "фи",
-    "фу",
-    "ха",
-    "хм",
-    "эх"
-];
-
-/// The interjections that call, answer or drive.
-pub const CALLING: &[&str] = &[
-    "ага",
-    "айда",
-    "алло",
-    "ау",
-    "брысь",
-    "кыш",
-    "марш",
-    "ну",
-    "стоп",
-    "тсс",
-    "цыц",
-    "чур",
-    "эге",
-    "эй"
-];
-
-/// The interjections of courtesy, which carry a formula whole.
-///
-/// `извините`, `простите` and `прощайте` are not here. Each is also the
-/// imperative of a live verb — `простите меня` commands — and no list tells
-/// the two apart. The three below have no such reading left.
-pub const COURTESY: &[&str] = &["здравствуйте", "пожалуйста", "спасибо"];
-
-/// The words that name a sound rather than say a feeling.
-pub const SOUNDING: &[&str] = &[
-    "бабах",
-    "бац",
-    "бух",
-    "дзинь",
-    "кап",
-    "хлоп",
-    "хрусть",
-    "чмок",
-    "шасть",
-    "шлёп"
-];
-
 /// Which kind an interjection is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -105,12 +37,82 @@ pub enum Kind {
     Sounding
 }
 
+impl Kind {
+    /// The interjections of feeling.
+    ///
+    /// `о` is here because § 157 names it one. It is written the same as the
+    /// preposition `о`, and nothing but the sentence tells the two apart: the
+    /// preposition governs a case and the interjection governs nothing.
+    pub const FEELING: &[&str] = &[
+        "ай",
+        "ах",
+        "ба",
+        "батюшки",
+        "боже",
+        "браво",
+        "брр",
+        "господи",
+        "о",
+        "ого",
+        "ой",
+        "ох",
+        "тьфу",
+        "увы",
+        "ура",
+        "уф",
+        "фи",
+        "фу",
+        "ха",
+        "хм",
+        "эх"
+    ];
+
+    /// The interjections that call, answer or drive.
+    pub const CALLING: &[&str] = &[
+        "ага",
+        "айда",
+        "алло",
+        "ау",
+        "брысь",
+        "кыш",
+        "марш",
+        "ну",
+        "стоп",
+        "тсс",
+        "цыц",
+        "чур",
+        "эге",
+        "эй"
+    ];
+
+    /// The interjections of courtesy, which carry a formula whole.
+    ///
+    /// `извините`, `простите` and `прощайте` are not here. Each is also the
+    /// imperative of a live verb — `простите меня` commands — and no list tells
+    /// the two apart. The three below have no such reading left.
+    pub const COURTESY: &[&str] = &["здравствуйте", "пожалуйста", "спасибо"];
+
+    /// The words that name a sound rather than say a feeling.
+    pub const SOUNDING: &[&str] = &[
+        "бабах",
+        "бац",
+        "бух",
+        "дзинь",
+        "кап",
+        "хлоп",
+        "хрусть",
+        "чмок",
+        "шасть",
+        "шлёп"
+    ];
+}
+
 /// Every kind, with the words in it.
 const ALL: &[(Kind, &[&str])] = &[
-    (Kind::Feeling, FEELING),
-    (Kind::Calling, CALLING),
-    (Kind::Courtesy, COURTESY),
-    (Kind::Sounding, SOUNDING)
+    (Kind::Feeling, Kind::FEELING),
+    (Kind::Calling, Kind::CALLING),
+    (Kind::Courtesy, Kind::COURTESY),
+    (Kind::Sounding, Kind::SOUNDING)
 ];
 
 /// The kind a written interjection is, or nothing when it is none.

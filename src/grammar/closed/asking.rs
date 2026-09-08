@@ -31,24 +31,43 @@
 //! [`crate::rules::svod`] cites it there. Here it is what it is underneath:
 //! how the words are made.
 
-/// The pronouns that ask.
+/// The words that ask.
 ///
-/// `сколько` is among them: it asks after a number and stands where a numeral
-/// stands, which is what the grammars call a pronominal numeral.
-pub const PRONOUNS: &[&str] = &["каков", "какой", "который", "кто", "сколько", "что", "чей"];
+/// Holds the two lists every negative and indefinite word is built from.
+/// [`Built`] names what was put on one of them, and [`built_from`] answers
+/// what a written word was built from.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::grammar::closed::asking::Asking;
+///
+/// assert!(Asking::PRONOUNS.contains(&"кто"));
+/// assert!(Asking::ADVERBS.contains(&"где"));
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Asking;
 
-/// The adverbs that ask.
-pub const ADVERBS: &[&str] = &[
-    "где",
-    "зачем",
-    "как",
-    "когда",
-    "куда",
-    "насколько",
-    "откуда",
-    "отчего",
-    "почему"
-];
+impl Asking {
+    /// The pronouns that ask.
+    ///
+    /// `сколько` is among them: it asks after a number and stands where a
+    /// numeral stands, which is what the grammars call a pronominal numeral.
+    pub const PRONOUNS: &[&str] = &["каков", "какой", "который", "кто", "сколько", "что", "чей"];
+
+    /// The adverbs that ask.
+    pub const ADVERBS: &[&str] = &[
+        "где",
+        "зачем",
+        "как",
+        "когда",
+        "куда",
+        "насколько",
+        "откуда",
+        "отчего",
+        "почему"
+    ];
+}
 
 /// What is put on an asking word, and what it makes of it.
 ///
@@ -101,15 +120,15 @@ pub fn asks(written: &str) -> bool {
 
 /// The asking word a written one is, in the form the lists hold it.
 ///
-/// Answers a word out of [`PRONOUNS`] or [`ADVERBS`] rather than a piece of
-/// what was passed in, so what comes back is always the dictionary form and
-/// always outlives the call.
+/// Answers a word out of [`Asking::PRONOUNS`] or [`Asking::ADVERBS`] rather
+/// than a piece of what was passed in, so what comes back is always the
+/// dictionary form and always outlives the call.
 fn asked(written: &str) -> Option<&'static str> {
     let held = written.to_lowercase();
 
-    PRONOUNS
+    Asking::PRONOUNS
         .iter()
-        .chain(ADVERBS)
+        .chain(Asking::ADVERBS)
         .find(|word| **word == held)
         .copied()
 }
@@ -225,7 +244,7 @@ mod tests {
 
     #[test]
     fn every_asking_word_builds_a_negative_and_five_indefinites() {
-        for held in PRONOUNS.iter().chain(ADVERBS) {
+        for held in Asking::PRONOUNS.iter().chain(Asking::ADVERBS) {
             assert!(denies(&std::format!("ни{held}")), "ни{held}");
             assert_eq!(
                 built_from(&std::format!("не{held}")).map(|(built, _)| built),

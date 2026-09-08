@@ -13,13 +13,30 @@
 
 use crate::rules::{Citation, Findings, Found, Scope, found::spelled, scope};
 
-/// Where this rule is written.
-pub const CITES: Citation = Citation::whole(3);
-
-/// What this rule is about.
+/// The paragraph as a rule: what it cites and what it is about.
 ///
-/// Every word: `ц` takes the same letters after it whatever the word is.
-pub const SCOPE: Scope = scope::ANY;
+/// Holds the citation and the scope together so the engine can list the
+/// paragraph alongside the others. The judging function [`found`] stays
+/// free.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::ts_vowels::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 3);
+/// ```
+pub struct Rule;
+
+impl Rule {
+    /// Where this rule is written.
+    pub const CITES: Citation = Citation::whole(3);
+
+    /// What this rule is about.
+    ///
+    /// Every word: `ц` takes the same letters after it whatever the word is.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+}
 
 /// What the paragraph says when it is broken.
 const SAYS: &str = "после ц пишутся у и а; ю и я стоят там только в иноязычных именах";
@@ -67,7 +84,7 @@ pub fn found(written: &str, proper: bool) -> Findings {
         };
 
         held.push(Found::new(
-            CITES,
+            Rule::CITES,
             after,
             SAYS,
             spelled(written, after, instead)
@@ -95,8 +112,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 3);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 3);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]

@@ -30,124 +30,6 @@
 
 use crate::grammar::{Case, Number};
 
-/// The cardinals a number is built from.
-pub const CARDINAL: &[&str] = &[
-    "восемнадцать",
-    "восемь",
-    "восемьдесят",
-    "восемьсот",
-    "два",
-    "двадцать",
-    "две",
-    "двенадцать",
-    "двести",
-    "девяносто",
-    "девятнадцать",
-    "девять",
-    "девятьсот",
-    "десять",
-    "сорок",
-    "сто",
-    "тринадцать",
-    "три",
-    "тридцать",
-    "триста",
-    "тысяча",
-    "четыре",
-    "четыреста",
-    "четырнадцать",
-    "шестнадцать",
-    "шесть",
-    "шестьдесят",
-    "шестьсот",
-    "миллиард",
-    "миллион",
-    "ноль",
-    "нуль",
-    "один",
-    "одна",
-    "одно",
-    "одиннадцать",
-    "пятнадцать",
-    "пять",
-    "пятьдесят",
-    "пятьсот",
-    "семнадцать",
-    "семь",
-    "семьдесят",
-    "семьсот"
-];
-
-/// The collectives, which count only what is animate.
-pub const COLLECTIVE: &[&str] = &[
-    "восьмеро",
-    "двое",
-    "девятеро",
-    "десятеро",
-    "пятеро",
-    "семеро",
-    "трое",
-    "четверо",
-    "шестеро"
-];
-
-/// `оба` and `обе`, which count a pair of anything.
-///
-/// The grammars file them with the collectives, but the animacy restriction
-/// does not reach them: `оба стола` and `обе книги` are as right as `оба
-/// друга`.
-pub const BOTH: &[&str] = &["оба", "обе"];
-
-/// The fractionals written in one word.
-pub const FRACTIONAL: &[&str] = &["полтора", "полтораста", "полторы"];
-
-/// The ordinals, in dictionary form.
-///
-/// They decline as adjectives and agree rather than govern, so they carry no
-/// entry in the government table.
-pub const ORDINAL: &[&str] = &[
-    "восемнадцатый",
-    "восьмидесятый",
-    "восьмисотый",
-    "восьмой",
-    "второй",
-    "двадцатый",
-    "двенадцатый",
-    "двухсотый",
-    "девяностый",
-    "девятисотый",
-    "девятнадцатый",
-    "девятый",
-    "десятый",
-    "миллиардный",
-    "миллионный",
-    "нулевой",
-    "одиннадцатый",
-    "первый",
-    "пятидесятый",
-    "пятисотый",
-    "пятнадцатый",
-    "пятый",
-    "седьмой",
-    "семидесятый",
-    "семисотый",
-    "семнадцатый",
-    "сороковой",
-    "сотый",
-    "тридцатый",
-    "тринадцатый",
-    "третий",
-    "трёхсотый",
-    "тысячный",
-    "четвёртый",
-    "четырёхсотый",
-    "четырнадцатый",
-    "шестидесятый",
-    "шестисотый",
-    "шестнадцатый",
-    "шестой"
-];
-
 /// Which kind a numeral is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -161,6 +43,126 @@ pub enum Kind {
     Fractional,
     /// Names a place in an order and agrees: `первый`, `третий`.
     Ordinal
+}
+
+impl Kind {
+    /// The cardinals a number is built from.
+    pub const CARDINAL: &[&str] = &[
+        "восемнадцать",
+        "восемь",
+        "восемьдесят",
+        "восемьсот",
+        "два",
+        "двадцать",
+        "две",
+        "двенадцать",
+        "двести",
+        "девяносто",
+        "девятнадцать",
+        "девять",
+        "девятьсот",
+        "десять",
+        "сорок",
+        "сто",
+        "тринадцать",
+        "три",
+        "тридцать",
+        "триста",
+        "тысяча",
+        "четыре",
+        "четыреста",
+        "четырнадцать",
+        "шестнадцать",
+        "шесть",
+        "шестьдесят",
+        "шестьсот",
+        "миллиард",
+        "миллион",
+        "ноль",
+        "нуль",
+        "один",
+        "одна",
+        "одно",
+        "одиннадцать",
+        "пятнадцать",
+        "пять",
+        "пятьдесят",
+        "пятьсот",
+        "семнадцать",
+        "семь",
+        "семьдесят",
+        "семьсот"
+    ];
+
+    /// The collectives, which count only what is animate.
+    pub const COLLECTIVE: &[&str] = &[
+        "восьмеро",
+        "двое",
+        "девятеро",
+        "десятеро",
+        "пятеро",
+        "семеро",
+        "трое",
+        "четверо",
+        "шестеро"
+    ];
+
+    /// `оба` and `обе`, which count a pair of anything.
+    ///
+    /// The grammars file them with the collectives, but the animacy restriction
+    /// does not reach them: `оба стола` and `обе книги` are as right as `оба
+    /// друга`.
+    pub const BOTH: &[&str] = &["оба", "обе"];
+
+    /// The fractionals written in one word.
+    pub const FRACTIONAL: &[&str] = &["полтора", "полтораста", "полторы"];
+
+    /// The ordinals, in dictionary form.
+    ///
+    /// They decline as adjectives and agree rather than govern, so they carry
+    /// no entry in the government table.
+    pub const ORDINAL: &[&str] = &[
+        "восемнадцатый",
+        "восьмидесятый",
+        "восьмисотый",
+        "восьмой",
+        "второй",
+        "двадцатый",
+        "двенадцатый",
+        "двухсотый",
+        "девяностый",
+        "девятисотый",
+        "девятнадцатый",
+        "девятый",
+        "десятый",
+        "миллиардный",
+        "миллионный",
+        "нулевой",
+        "одиннадцатый",
+        "первый",
+        "пятидесятый",
+        "пятисотый",
+        "пятнадцатый",
+        "пятый",
+        "седьмой",
+        "семидесятый",
+        "семисотый",
+        "семнадцатый",
+        "сороковой",
+        "сотый",
+        "тридцатый",
+        "тринадцатый",
+        "третий",
+        "трёхсотый",
+        "тысячный",
+        "четвёртый",
+        "четырёхсотый",
+        "четырнадцатый",
+        "шестидесятый",
+        "шестисотый",
+        "шестнадцатый",
+        "шестой"
+    ];
 }
 
 /// What a numeral does to the noun it counts, in the nominative.
@@ -192,16 +194,16 @@ pub struct Counts {
 pub fn kind(written: &str) -> Option<Kind> {
     let held = written.to_lowercase();
 
-    if CARDINAL.contains(&held.as_str()) {
+    if Kind::CARDINAL.contains(&held.as_str()) {
         return Some(Kind::Cardinal);
     }
-    if COLLECTIVE.contains(&held.as_str()) || BOTH.contains(&held.as_str()) {
+    if Kind::COLLECTIVE.contains(&held.as_str()) || Kind::BOTH.contains(&held.as_str()) {
         return Some(Kind::Collective);
     }
-    if FRACTIONAL.contains(&held.as_str()) {
+    if Kind::FRACTIONAL.contains(&held.as_str()) {
         return Some(Kind::Fractional);
     }
-    if ORDINAL.contains(&held.as_str()) {
+    if Kind::ORDINAL.contains(&held.as_str()) {
         return Some(Kind::Ordinal);
     }
 
@@ -272,7 +274,7 @@ pub fn counts(written: &str) -> Option<Counts> {
 /// right.
 #[must_use]
 pub fn counts_the_animate(written: &str) -> bool {
-    COLLECTIVE.contains(&written.to_lowercase().as_str())
+    Kind::COLLECTIVE.contains(&written.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -281,7 +283,13 @@ mod tests {
 
     #[test]
     fn every_class_is_sorted_and_holds_no_word_twice() {
-        for class in [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL] {
+        for class in [
+            Kind::CARDINAL,
+            Kind::COLLECTIVE,
+            Kind::BOTH,
+            Kind::FRACTIONAL,
+            Kind::ORDINAL
+        ] {
             let mut held = class.to_vec();
             held.sort_unstable();
             held.dedup();
@@ -292,12 +300,25 @@ mod tests {
 
     #[test]
     fn every_numeral_is_of_exactly_one_kind() {
-        for class in [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL] {
+        for class in [
+            Kind::CARDINAL,
+            Kind::COLLECTIVE,
+            Kind::BOTH,
+            Kind::FRACTIONAL,
+            Kind::ORDINAL
+        ] {
             for held in class {
                 assert!(is_numeral(held), "{held} is no numeral");
             }
         }
-        let mut every: Vec<&str> = [CARDINAL, COLLECTIVE, BOTH, FRACTIONAL, ORDINAL].concat();
+        let mut every: Vec<&str> = [
+            Kind::CARDINAL,
+            Kind::COLLECTIVE,
+            Kind::BOTH,
+            Kind::FRACTIONAL,
+            Kind::ORDINAL
+        ]
+        .concat();
         let counted = every.len();
         every.sort_unstable();
         every.dedup();

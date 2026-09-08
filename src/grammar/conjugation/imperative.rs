@@ -26,6 +26,9 @@ pub enum Ending {
 }
 
 impl Ending {
+    /// The ending appended to address more than one, or one politely.
+    pub const PLURAL: &str = "те";
+
     /// How the ending is written.
     #[must_use]
     pub const fn written(self) -> &'static str {
@@ -36,9 +39,6 @@ impl Ending {
         }
     }
 }
-
-/// The ending appended to address more than one, or one politely.
-pub const PLURAL: &str = "те";
 
 /// The glide a present stem may already end in.
 ///

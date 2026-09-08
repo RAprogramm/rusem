@@ -17,10 +17,10 @@ default = []
 serde = ["dep:serde"]
 
 [dependencies]
-masterror = { version = "0.30", default-features = false, features = ["std"] }
+masterror = { version = "0.31", default-features = false, features = ["std"] }
 serde = { version = "1", default-features = false, features = [
   "derive",
-  "alloc"
+  "alloc",
 ], optional = true }
 
 [[example]]

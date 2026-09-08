@@ -30,7 +30,7 @@ use crate::{
         Facts,
         facts::{About, Writing},
         rule,
-        svod::written::RULES
+        svod::written::Rules
     }
 };
 
@@ -81,7 +81,7 @@ impl Law for Spelled {
 /// form and let it through, and a rule the scope keeps out was never asked at
 /// all — the two are told apart by the scope, not by the answer.
 fn refused(facts: &Facts<'_>) -> Option<Says> {
-    RULES.iter().find_map(|held| {
+    Rules::RULES.iter().find_map(|held| {
         rule::asked(*held, facts)
             .first()
             .map(|one| Says::Misspelled(one.cites))

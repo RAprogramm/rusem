@@ -19,17 +19,41 @@ use crate::{
     rules::{Citation, Findings, Found, Scope, found::spelled, scope}
 };
 
-/// Where this rule is written.
+/// § 1 as a rule.
 ///
-/// The paragraph is a single statement with no numbered points, so it is
-/// cited whole.
-pub const CITES: Citation = Citation::whole(1);
+/// Holds where the paragraph is written, what it is about and the letters
+/// refused outside loanwords.
+///
+/// # Examples
+///
+/// ```
+/// use rusem::rules::svod::sibilant_vowels::Rule;
+///
+/// assert_eq!(Rule::CITES.paragraph, 1);
+/// assert_eq!(Rule::REFUSED_IN_NATIVE, &['ю', 'я']);
+/// ```
+pub struct Rule;
 
-/// What this rule is about.
-///
-/// Every word: a sibilant takes the same letters after it whatever the word
-/// is, and § 1 names no part of speech.
-pub const SCOPE: Scope = scope::ANY;
+impl Rule {
+    /// Where this rule is written.
+    ///
+    /// The paragraph is a single statement with no numbered points, so it is
+    /// cited whole.
+    pub const CITES: Citation = Citation::whole(1);
+
+    /// What this rule is about.
+    ///
+    /// Every word: a sibilant takes the same letters after it whatever the word
+    /// is, and § 1 names no part of speech.
+    pub const SCOPE: Scope = scope::Scope::ANY;
+
+    /// The letters the paragraph refuses outside loanwords.
+    ///
+    /// Stated so that a caller which does know a word to be native may ask the
+    /// stricter question. Nothing in the engine knows that yet, and nothing
+    /// calls this.
+    pub const REFUSED_IN_NATIVE: &[char] = &['ю', 'я'];
+}
 
 /// What the paragraph says when it is broken.
 const SAYS: &str = "после шипящей пишется и, а не ы";
@@ -39,13 +63,6 @@ const REFUSED: char = 'ы';
 
 /// The letter the paragraph writes in its place.
 const WRITTEN: char = 'и';
-
-/// The letters the paragraph refuses outside loanwords.
-///
-/// Stated so that a caller which does know a word to be native may ask the
-/// stricter question. Nothing in the engine knows that yet, and nothing calls
-/// this.
-pub const REFUSED_IN_NATIVE: &[char] = &['ю', 'я'];
 
 /// What the paragraph finds in a written word.
 ///
@@ -80,7 +97,7 @@ pub fn found(written: &str) -> Findings {
         }
 
         held.push(Found::new(
-            CITES,
+            Rule::CITES,
             after,
             SAYS,
             spelled(written, after, WRITTEN)
@@ -96,8 +113,8 @@ mod tests {
 
     #[test]
     fn the_paragraph_is_cited() {
-        assert_eq!(CITES.paragraph, 1);
-        assert!(CITES.is_stated());
+        assert_eq!(Rule::CITES.paragraph, 1);
+        assert!(Rule::CITES.is_stated());
     }
 
     #[test]
@@ -118,7 +135,7 @@ mod tests {
         let held = found("жыр");
 
         assert_eq!(held.len(), 1);
-        assert_eq!(held[0].cites, CITES);
+        assert_eq!(held[0].cites, Rule::CITES);
         assert_eq!(held[0].at, 1);
         assert_eq!(held[0].says, SAYS);
         assert_eq!(held[0].instead, "жир");

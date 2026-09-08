@@ -16,19 +16,6 @@ use std::{borrow::ToOwned, string::String, vec::Vec};
 
 use crate::phonetics::stress::table::Table;
 
-/// The combining acute accent Russian marks stress with.
-///
-/// Named by the alphabet, which is where the marks are stated, and re-exported
-/// here because this is where they are written.
-pub const ACUTE: char = crate::alphabet::Mark::Acute.written();
-
-/// What an analyzer settled on for one word.
-///
-/// The same shape a placement in the table has, and deliberately the same
-/// type: what the table stores about a spelling and what an analyzer says
-/// about it are the same two facts, and two declarations of them would drift.
-pub use crate::phonetics::stress::table::Reading;
-
 /// One word of a text, with the stress placed if it could be.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Marked {
@@ -39,6 +26,21 @@ pub struct Marked {
     /// Whether the spelling takes the stress in more than one place.
     pub homograph: bool
 }
+
+impl Marked {
+    /// The combining acute accent Russian marks stress with.
+    ///
+    /// Named by the alphabet, which is where the marks are stated, and
+    /// re-exported here because this is where they are written.
+    pub const ACUTE: char = crate::alphabet::Mark::Acute.written();
+}
+
+/// What an analyzer settled on for one word.
+///
+/// The same shape a placement in the table has, and deliberately the same
+/// type: what the table stores about a spelling and what an analyzer says
+/// about it are the same two facts, and two declarations of them would drift.
+pub use crate::phonetics::stress::table::Reading;
 
 /// Reports whether a word needs a mark at all.
 ///
@@ -213,13 +215,13 @@ use crate::alphabet::syllables;
 /// never written must not be reported as placed. The caller turns the refusal
 /// into a bare word rather than a lying one.
 fn marked(word: &str, vowel: usize) -> Option<String> {
-    let mut written = String::with_capacity(word.len() + ACUTE.len_utf8());
+    let mut written = String::with_capacity(word.len() + Marked::ACUTE.len_utf8());
     let mut placed = false;
 
     for (position, letter) in word.chars().enumerate() {
         written.push(letter);
         if position == vowel {
-            written.push(ACUTE);
+            written.push(Marked::ACUTE);
             placed = true;
         }
     }
@@ -391,7 +393,7 @@ mod tests {
         );
 
         assert!(held.placed);
-        assert!(held.written.contains(ACUTE));
+        assert!(held.written.contains(Marked::ACUTE));
     }
 
     #[test]
